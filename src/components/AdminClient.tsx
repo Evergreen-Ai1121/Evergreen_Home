@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, Loader2, LogOut, Trash2 } from "lucide-react";
+import { Loader2, LogOut, Trash2 } from "lucide-react";
 import type { Moment } from "@/lib/moments";
 import type { Comment } from "@/lib/comments";
 import { GlassCard } from "./GlassCard";
@@ -14,7 +14,7 @@ export function AdminClient() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [list, setList] = useState<Moment[]>([]);
-  const [pending, setPending] = useState<Comment[]>([]);
+  const [comments, setComments] = useState<Comment[]>([]);
 
   useEffect(() => {
     fetch("/api/admin/session")
@@ -32,14 +32,14 @@ export function AdminClient() {
   useEffect(() => {
     if (authed) {
       refresh();
-      refreshPending();
+      refreshComments();
     }
   }, [authed]);
 
-  const refreshPending = async () => {
-    const r = await fetch("/api/comments?status=pending");
+  const refreshComments = async () => {
+    const r = await fetch("/api/comments?status=all");
     const d = await r.json().catch(() => ({}));
-    setPending(d.items ?? []);
+    setComments(d.items ?? []);
   };
 
   const moderate = async (id: number, status: "approved" | "spam") => {
@@ -48,14 +48,14 @@ export function AdminClient() {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ status }),
     });
-    if (r.ok) refreshPending();
+    if (r.ok) refreshComments();
     else setError((await r.json()).error ?? "操作失败");
   };
 
   const removeComment = async (id: number) => {
     if (!confirm("确定删除这条评论？")) return;
     const r = await fetch(`/api/comments/${id}`, { method: "DELETE" });
-    if (r.ok) refreshPending();
+    if (r.ok) refreshComments();
     else setError((await r.json()).error ?? "删除失败");
   };
 
@@ -187,37 +187,43 @@ export function AdminClient() {
         </form>
       </GlassCard>
 
-      {pending.length > 0 && (
+      {comments.length > 0 && (
         <>
           <h2 className="mb-3 mt-10 text-sm text-text-muted">
-            待审核评论（{pending.length}）
+            最新评论（{comments.length}）
           </h2>
           <div className="space-y-3">
-            {pending.map((c) => (
+            {comments.map((c) => (
               <GlassCard key={c.id} className="flex items-start gap-3 p-4">
                 <div className="min-w-0 flex-1">
                   <p className="text-xs text-text-muted">
                     {c.nickname} · {c.slug} · {c.createdAt}
+                    {c.status === "spam" && (
+                      <span className="ml-2 text-red-500">已隐藏</span>
+                    )}
                   </p>
                   <p className="mt-1 whitespace-pre-wrap text-sm">{c.content}</p>
                 </div>
                 <div className="flex shrink-0 items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => moderate(c.id, "approved")}
-                    aria-label="通过"
-                    className="rounded-control p-2 text-text-muted hover:text-accent"
-                  >
-                    <Check className="h-4 w-4" strokeWidth={1.5} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => moderate(c.id, "spam")}
-                    aria-label="标记为垃圾"
-                    className="rounded-control p-2 text-xs text-text-muted hover:text-text"
-                  >
-                    垃圾
-                  </button>
+                  {c.status === "spam" ? (
+                    <button
+                      type="button"
+                      onClick={() => moderate(c.id, "approved")}
+                      aria-label="恢复显示"
+                      className="rounded-control p-2 text-xs text-text-muted hover:text-accent"
+                    >
+                      恢复
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => moderate(c.id, "spam")}
+                      aria-label="隐藏这条评论"
+                      className="rounded-control p-2 text-xs text-text-muted hover:text-text"
+                    >
+                      隐藏
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => removeComment(c.id)}

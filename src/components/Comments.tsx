@@ -38,7 +38,7 @@ export function Comments({ slug }: { slug: string }) {
   const [replyTo, setReplyTo] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [submitted, setSubmitted] = useState(false);
+  const [justPosted, setJustPosted] = useState(false);
 
   const refresh = async () => {
     try {
@@ -95,7 +95,8 @@ export function Comments({ slug }: { slug: string }) {
       if (email.trim()) localStorage.setItem(MAIL_KEY, email.trim());
       setContent("");
       setReplyTo(null);
-      setSubmitted(true);
+      setJustPosted(true);
+      await refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "提交失败");
     } finally {
@@ -144,7 +145,7 @@ export function Comments({ slug }: { slug: string }) {
                           type="button"
                           onClick={() => {
                             setReplyTo(c.id);
-                            setSubmitted(false);
+                            setJustPosted(false);
                           }}
                           className="mt-1 text-xs text-text-muted hover:text-accent"
                         >
@@ -232,8 +233,8 @@ export function Comments({ slug }: { slug: string }) {
                   {content.length}/{MAX_CONTENT}
                 </span>
               </div>
-              {submitted && (
-                <p className="text-sm text-accent">评论已提交，通过审核后会显示在这里。</p>
+              {justPosted && (
+                <p className="text-sm text-accent">评论已发布。</p>
               )}
               {error && <p className="text-sm text-red-500">{error}</p>}
             </form>

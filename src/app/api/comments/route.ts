@@ -14,11 +14,12 @@ export async function GET(req: Request) {
   // 管理端：按状态拉取待审核列表
   if (status) {
     if (!(await isAuthed())) return NextResponse.json({ error: "未授权" }, { status: 401 });
-    if (!["pending", "approved", "spam"].includes(status)) {
+    if (status !== "all" && !["pending", "approved", "spam"].includes(status)) {
       return NextResponse.json({ error: "状态不合法" }, { status: 400 });
     }
     try {
-      return NextResponse.json({ items: await listAllComments(status as CommentStatus) });
+      const filter = status === "all" ? undefined : (status as CommentStatus);
+      return NextResponse.json({ items: await listAllComments(filter) });
     } catch {
       return NextResponse.json({ items: [], degraded: true });
     }
@@ -67,7 +68,7 @@ export async function POST(req: Request) {
 
   try {
     const id = await createComment({ slug, parentId, nickname, email, content });
-    return NextResponse.json({ id, pending: true }, { status: 201 });
+    return NextResponse.json({ id }, { status: 201 });
   } catch {
     return NextResponse.json({ error: "评论服务暂不可用，请稍后再试" }, { status: 503 });
   }

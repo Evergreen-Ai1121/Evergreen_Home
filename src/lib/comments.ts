@@ -73,8 +73,9 @@ export async function createComment(input: {
 }): Promise<number> {
   const db = await ensureSchema();
   if (!db) throw new Error("数据库未配置：请设置 TURSO_DATABASE_URL");
+  // 发布即显示：不做审核队列，垃圾评论由 /admin 事后隐藏或删除
   const res = await db.execute({
-    sql: "insert into comments (slug, parent_id, nickname, email, content) values (?, ?, ?, ?, ?)",
+    sql: "insert into comments (slug, parent_id, nickname, email, content, status) values (?, ?, ?, ?, ?, 'approved')",
     args: [
       input.slug,
       input.parentId ?? null,
