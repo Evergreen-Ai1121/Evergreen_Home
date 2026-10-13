@@ -5,6 +5,30 @@
 
 ---
 
+## 当前部署状态（2026-10-13 已上线）
+
+| 项 | 值 |
+|---|---|
+| 平台 | Vercel（项目 `evergreen-home`） |
+| 正式域名 | **https://evergreen1121.cn**（`www` 已 307 重定向到主域） |
+| 备用地址 | https://evergreen-home.vercel.app |
+| 代码仓库 | https://github.com/Evergreen-Ai1121/Evergreen_Home |
+| 数据库 | Turso `evergreen-site`（aws-us-east-1），表已初始化 |
+| 已配置环境变量 | `NEXT_PUBLIC_SITE_URL`、`ADMIN_TOKEN`、`TURSO_DATABASE_URL`、`TURSO_AUTH_TOKEN` |
+| 待补 | 自定义域名、COS 图片上传、giscus 评论 |
+
+常用命令（已装 Vercel CLI）：
+
+```bash
+vercel --prod              # 重新部署当前代码
+vercel env ls              # 查看环境变量
+vercel logs <deployment>   # 看线上日志
+```
+
+改完 `NEXT_PUBLIC_*` 变量必须重新部署才会生效（`NEXT_PUBLIC_` 是构建期注入的）。
+
+---
+
 ## 0. 前置检查
 
 ```bash

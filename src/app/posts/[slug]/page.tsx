@@ -6,6 +6,7 @@ import { TableOfContents } from "@/components/TableOfContents";
 import { TagChip } from "@/components/Cards";
 import { Comments } from "@/components/Comments";
 import { PageHeader } from "@/components/PageHeader";
+import { License } from "@/components/License";
 import { SafeImage } from "@/components/SafeImage";
 
 export function generateStaticParams() {
@@ -54,7 +55,9 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
             </div>
           )}
 
-          <Comments />
+          <License title={doc.title} path={`/posts/${doc.slug}`} />
+
+          <Comments slug={doc.slug} />
         </article>
         <TableOfContents items={doc.toc} variant="sidebar" />
       </div>

@@ -6,6 +6,7 @@ import { Mdx } from "@/components/Mdx";
 import { TableOfContents } from "@/components/TableOfContents";
 import { TagChip } from "@/components/Cards";
 import { PageHeader } from "@/components/PageHeader";
+import { License } from "@/components/License";
 
 export function generateStaticParams() {
   return getAllSlugs("notes").map((slug) => ({ slug }));
@@ -54,6 +55,8 @@ export default async function NotePage({ params }: { params: Promise<{ slug: str
               ))}
             </div>
           )}
+
+          <License title={doc.title} path={`/notes/${doc.slug}`} />
         </article>
         <TableOfContents items={doc.toc} variant="sidebar" />
       </div>

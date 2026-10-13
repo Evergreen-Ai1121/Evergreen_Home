@@ -23,6 +23,8 @@ export interface DocMeta {
   draft: boolean;
   readingTime: number;
   featured: boolean;
+  /** frontmatter 里的徽标，设为 Pin 时列表置顶 */
+  badge?: string;
   stack: string[];
   links: DocLink[];
 }
@@ -89,6 +91,7 @@ function toMeta(type: CollectionType, filename: string, raw: string): DocMeta {
     draft: Boolean(data.draft),
     readingTime: readingTimeOf(content),
     featured: Boolean(data.featured),
+    badge: data.badge ? String(data.badge) : undefined,
     stack: Array.isArray(data.stack) ? data.stack.map(String) : [],
     links: Array.isArray(data.links)
       ? data.links.map((l: DocLink) => ({ label: String(l.label), href: String(l.href) }))
@@ -96,13 +99,20 @@ function toMeta(type: CollectionType, filename: string, raw: string): DocMeta {
   };
 }
 
-/** 读取某个集合的全部文档，按日期倒序（draft 在生产构建中被剔除） */
+export const PIN_BADGE = "Pin";
+
+/** 读取某个集合的全部文档：置顶（badge: Pin）优先，其余按日期倒序（draft 在生产构建中被剔除） */
 export function getCollection(type: CollectionType): DocMeta[] {
   const includeDrafts = process.env.NODE_ENV !== "production";
   return readDir(type)
     .map((f) => toMeta(type, f, fs.readFileSync(path.join(CONTENT_DIR, type, f), "utf8")))
     .filter((d) => includeDrafts || !d.draft)
-    .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+    .sort((a, b) => {
+      const ap = a.badge === PIN_BADGE ? 1 : 0;
+      const bp = b.badge === PIN_BADGE ? 1 : 0;
+      if (ap !== bp) return bp - ap;
+      return a.date < b.date ? 1 : a.date > b.date ? -1 : 0;
+    });
 }
 
 export function getAllSlugs(type: CollectionType): string[] {

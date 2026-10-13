@@ -16,7 +16,7 @@ export const site = {
   ],
   social: [
     { label: "GitHub", href: "https://github.com/", key: "github" },
-    { label: "邮箱", href: "mailto:you@example.com", key: "mail" },
+    { label: "邮箱", href: "mailto:aievergreen@qq.com", key: "mail" },
   ],
   giscus: {
     repo: process.env.NEXT_PUBLIC_GISCUS_REPO ?? "",

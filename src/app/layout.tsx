@@ -5,6 +5,7 @@ import { site } from "@/lib/site";
 import { GlowBackground } from "@/components/GlowBackground";
 import { SearchProvider } from "@/components/SearchProvider";
 import { BottomTabBar, SideNav, TopBar } from "@/components/Nav";
+import { ScrollToTop } from "@/components/ScrollToTop";
 import { themeInitScript } from "@/components/ThemeToggle";
 
 export const metadata: Metadata = {
@@ -14,6 +15,10 @@ export const metadata: Metadata = {
     template: `%s · ${site.name}`,
   },
   description: site.description,
+  alternates: {
+    canonical: site.url,
+    types: { "application/rss+xml": `${site.url.replace(/\/$/, "")}/rss.xml` },
+  },
   openGraph: {
     type: "website",
     locale: "zh_CN",
@@ -59,6 +64,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </footer>
           </div>
           <BottomTabBar />
+          <ScrollToTop />
         </SearchProvider>
       </body>
     </html>

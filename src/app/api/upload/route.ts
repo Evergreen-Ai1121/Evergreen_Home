@@ -9,7 +9,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "上传过于频繁" }, { status: 429 });
   }
   if (!cosConfigured()) {
-    return NextResponse.json({ error: "对象存储未配置" }, { status: 500 });
+    // 未配置对象存储时是「功能未启用」，不是服务端错误
+    return NextResponse.json(
+      { error: "图片上传未启用：本站图片随仓库发布（放 public/images/）" },
+      { status: 503 },
+    );
   }
 
   let contentType = "";

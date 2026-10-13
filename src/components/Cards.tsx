@@ -17,6 +17,16 @@ export function TagChip({ name, href }: { name: string; href?: string }) {
   );
 }
 
+/** 置顶 / 自定义徽标 */
+export function BadgeChip({ badge }: { badge?: string }) {
+  if (!badge) return null;
+  return (
+    <span className="inline-flex items-center gap-1 rounded-pill bg-accent-soft px-2.5 py-0.5 text-xs text-accent">
+      {badge === "Pin" ? "置顶" : badge}
+    </span>
+  );
+}
+
 /** 文章卡片：封面 + 摘要 + 阅读时长 */
 export function ContentCard({ doc }: { doc: DocMeta }) {
   return (
@@ -34,6 +44,7 @@ export function ContentCard({ doc }: { doc: DocMeta }) {
               <Clock className="h-3.5 w-3.5" strokeWidth={1.5} />
               {doc.readingTime} 分钟
             </span>
+            <BadgeChip badge={doc.badge} />
           </div>
           <h3 className="mt-2 text-[17px] font-semibold">{doc.title}</h3>
           {doc.summary && (
@@ -64,6 +75,7 @@ export function NoteItem({ doc }: { doc: DocMeta }) {
             </span>
           )}
           <time dateTime={doc.date}>{doc.date}</time>
+          <BadgeChip badge={doc.badge} />
         </div>
         <h3 className="text-[17px] font-semibold">{doc.title}</h3>
         {doc.summary && (
@@ -93,6 +105,9 @@ export function ProjectCard({ doc }: { doc: DocMeta }) {
           </div>
         )}
         <div className="p-5">
+          <div className="mb-2">
+            <BadgeChip badge={doc.badge} />
+          </div>
           <h3 className="text-[17px] font-semibold">{doc.title}</h3>
           {doc.summary && (
             <p className="mt-2 line-clamp-3 text-sm text-text-muted">{doc.summary}</p>

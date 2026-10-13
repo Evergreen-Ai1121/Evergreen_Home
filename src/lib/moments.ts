@@ -1,4 +1,5 @@
-import { createClient, type Client } from "@libsql/client";
+import type { Client } from "@libsql/client";
+import { ensureSchema } from "./db";
 
 export interface MomentImage {
   key: string;
@@ -13,14 +14,8 @@ export interface Moment {
   createdAt: string;
 }
 
-let client: Client | null = null;
-
-/** 未配置数据库时返回 null（本地开发或尚未接入 Turso 的情况） */
-export function getDb(): Client | null {
-  const url = process.env.TURSO_DATABASE_URL;
-  if (!url) return null;
-  if (!client) client = createClient({ url, authToken: process.env.TURSO_AUTH_TOKEN });
-  return client;
+async function readyDb(): Promise<Client | null> {
+  return ensureSchema();
 }
 
 function parseImages(raw: unknown): MomentImage[] {
@@ -34,7 +29,7 @@ function parseImages(raw: unknown): MomentImage[] {
 }
 
 export async function listMoments(limit = 50, offset = 0): Promise<Moment[]> {
-  const db = getDb();
+  const db = await readyDb();
   if (!db) return [];
   const res = await db.execute({
     sql: "select id, content, images, created_at from moments order by datetime(created_at) desc limit ? offset ?",
@@ -49,7 +44,7 @@ export async function listMoments(limit = 50, offset = 0): Promise<Moment[]> {
 }
 
 export async function getMoment(id: number): Promise<Moment | null> {
-  const db = getDb();
+  const db = await readyDb();
   if (!db) return null;
   const res = await db.execute({
     sql: "select id, content, images, created_at from moments where id = ?",
@@ -66,7 +61,7 @@ export async function getMoment(id: number): Promise<Moment | null> {
 }
 
 export async function createMoment(content: string, images: MomentImage[]): Promise<number> {
-  const db = getDb();
+  const db = await readyDb();
   if (!db) throw new Error("数据库未配置：请设置 TURSO_DATABASE_URL");
   const res = await db.execute({
     sql: "insert into moments (content, images) values (?, ?)",
@@ -76,7 +71,7 @@ export async function createMoment(content: string, images: MomentImage[]): Prom
 }
 
 export async function updateMoment(id: number, content: string, images: MomentImage[]) {
-  const db = getDb();
+  const db = await readyDb();
   if (!db) throw new Error("数据库未配置：请设置 TURSO_DATABASE_URL");
   await db.execute({
     sql: "update moments set content = ?, images = ?, updated_at = datetime('now') where id = ?",
@@ -85,7 +80,7 @@ export async function updateMoment(id: number, content: string, images: MomentIm
 }
 
 export async function deleteMoment(id: number) {
-  const db = getDb();
+  const db = await readyDb();
   if (!db) throw new Error("数据库未配置：请设置 TURSO_DATABASE_URL");
   await db.execute({ sql: "delete from moments where id = ?", args: [id] });
 }

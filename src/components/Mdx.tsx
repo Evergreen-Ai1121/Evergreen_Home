@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { compileMDX } from "next-mdx-remote/rsc";
+import { evaluate } from "@mdx-js/mdx";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeSlug from "rehype-slug";
@@ -39,32 +39,37 @@ const components = {
 };
 
 export async function Mdx({ source, className }: { source: string; className?: string }) {
-  const { content } = await compileMDX({
-    source,
-    components,
-    options: {
-      mdxOptions: {
-        remarkPlugins: [remarkGfm, remarkMath],
-        rehypePlugins: [
-          rehypeSlug,
-          [rehypeKatex, { throwOnError: false }],
-          [rehypeAutolinkHeadings, { behavior: "wrap", properties: { className: "no-underline" } }],
-          [
-            rehypePrettyCode,
-            {
-              theme: { light: "github-light", dark: "github-dark" },
-              keepBackground: false,
-              defaultLang: "txt",
-            },
-          ],
-        ],
-      },
-    },
-  });
+  // jsx runtime 必须由本项目的模块解析（走 Next 的别名），
+  // 否则 dev 下 RSC 渲染会因元素缺少调试属性而 500。
+  const jsxRuntime =
+    process.env.NODE_ENV === "development"
+      ? await import("react/jsx-dev-runtime")
+      : await import("react/jsx-runtime");
+
+  const options = {
+    ...jsxRuntime,
+    remarkPlugins: [remarkGfm, remarkMath],
+    rehypePlugins: [
+      rehypeSlug,
+      [rehypeKatex, { throwOnError: false }],
+      [rehypeAutolinkHeadings, { behavior: "wrap", properties: { className: "no-underline" } }],
+      [
+        rehypePrettyCode,
+        {
+          theme: { light: "github-light", dark: "github-dark" },
+          keepBackground: false,
+          defaultLang: "txt",
+        },
+      ],
+    ],
+    development: process.env.NODE_ENV !== "production",
+  } as Parameters<typeof evaluate>[1];
+
+  const { default: MDXContent } = await evaluate(source, options);
 
   return (
     <div className={cn("prose prose-neutral max-w-none dark:prose-invert", className)}>
-      {content}
+      <MDXContent components={components} />
     </div>
   );
 }
