@@ -1,0 +1,34 @@
+---
+title: 玻璃拟态的性能代价
+date: 2026-09-25
+category: 前端
+tags: [CSS, 性能, 视觉]
+summary: backdrop-filter 很好看，但用错了会让滚动掉帧。
+---
+
+## 为什么会掉帧
+
+`backdrop-filter: blur()` 需要先把元素背后的内容渲染到一张离屏纹理，再做高斯模糊。模糊半径越大、面积越大、层数越多，代价越高。
+
+经验值：**单个大面积背景光晕用 `blur()` 直接做在伪元素上**是便宜的（一次性合成，可以 GPU 缓存）；**每个卡片都加 `backdrop-filter`** 在中低端安卓机上会明显掉帧。
+
+## 可行的折中
+
+1. 背景光晕控制在 2–3 个，用 `transform` 动画而不是 `filter` 动画
+2. 卡片数量多时（> 20 个）改为半透明纯色背景，不用 `backdrop-filter`
+3. 给模糊层加 `will-change: transform` 要克制，它会额外占用显存
+
+```css
+/* 光晕：只动 transform，不动 filter */
+.glow {
+  filter: blur(110px);
+  animation: drift 26s ease-in-out infinite;
+}
+@keyframes drift {
+  50% { transform: translate3d(6%, -4%, 0) scale(1.08); }
+}
+```
+
+## 无障碍别忘了
+
+`prefers-reduced-motion: reduce` 时关掉漂移动画；玻璃层上的文字要额外校验对比度，因为背景是半透明的，实际对比度会随底图变化。

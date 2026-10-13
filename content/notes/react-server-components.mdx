@@ -1,0 +1,40 @@
+---
+title: 理解 React Server Components
+date: 2026-09-18
+category: 前端
+tags: [React, Next.js, RSC]
+summary: 理清 RSC 到底解决了什么问题，以及"use client" 边界该怎么划。
+---
+
+## 它解决的不是性能问题
+
+RSC 最直接的收益是**组件可以在服务端执行、不进入客户端 bundle**。但真正的分水岭在于：数据获取从"客户端发起请求"变回"服务端直接读数据源"。
+
+```ts
+// 服务端组件：直接读数据库，没有 API 层
+export default async function Page() {
+  const rows = await db.query("select * from moments limit 10");
+  return <Feed items={rows} />;
+}
+```
+
+代价是你需要清楚地知道**哪一段代码跑在哪里**。
+
+## 边界怎么划
+
+判断标准只有一条：这段代码是否需要浏览器能力？
+
+- 需要 `useState` / `useEffect` / DOM API / 事件监听 → `"use client"`
+- 只做数据读取和渲染 → 服务端组件，不用加任何指令
+
+客户端组件应该尽量**小而靠叶子节点**。常见错误是给整个页面加 `"use client"`，那样下面的所有子组件都会被打包进客户端。
+
+## 服务端组件不能做什么
+
+- 不能用 hooks（没有状态生命周期）
+- 不能传函数给客户端组件（不可序列化），只能传可序列化的数据
+- 不能访问 `window` / `localStorage`
+
+## 一点实践体会
+
+把"数据获取"留在服务端、"交互"留在客户端，中间用最小的 props 连接。这样客户端 bundle 通常能压到很小，LCP 也更容易达标。

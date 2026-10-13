@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" width="1200" height="675" role="img" aria-label="渐变封面占位图">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#A8C8FF"/>
+      <stop offset="55%" stop-color="#C9BCFF"/>
+      <stop offset="100%" stop-color="#B6E7FF"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="675" fill="#F6F8FC"/>
+  <rect width="1200" height="675" fill="url(#g)" opacity="0.85"/>
+  <circle cx="240" cy="180" r="260" fill="#ffffff" opacity="0.35"/>
+  <circle cx="980" cy="520" r="220" fill="#ffffff" opacity="0.28"/>
+</svg>

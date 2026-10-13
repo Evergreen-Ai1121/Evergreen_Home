@@ -1,0 +1,63 @@
+import { notFound } from "next/navigation";
+import { Clock } from "lucide-react";
+import { getAllSlugs, getDoc } from "@/lib/content";
+import { Mdx } from "@/components/Mdx";
+import { TableOfContents } from "@/components/TableOfContents";
+import { TagChip } from "@/components/Cards";
+import { Comments } from "@/components/Comments";
+import { PageHeader } from "@/components/PageHeader";
+import { SafeImage } from "@/components/SafeImage";
+
+export function generateStaticParams() {
+  return getAllSlugs("posts").map((slug) => ({ slug }));
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const doc = getDoc("posts", slug);
+  if (!doc) return {};
+  return { title: doc.title, description: doc.summary };
+}
+
+export default async function PostPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const doc = getDoc("posts", slug);
+  if (!doc) notFound();
+
+  return (
+    <div className="wide:mx-auto wide:max-w-wide">
+      <div className="wide:grid wide:grid-cols-[720px_240px] wide:justify-center wide:gap-10">
+        <article className="mx-auto min-w-0 max-w-reading wide:mx-0">
+          <PageHeader title={doc.title} description={doc.summary} />
+          <div className="mb-8 flex flex-wrap items-center gap-3 text-xs text-text-muted">
+            <time dateTime={doc.date}>{doc.date}</time>
+            <span className="inline-flex items-center gap-1">
+              <Clock className="h-3.5 w-3.5" strokeWidth={1.5} />
+              {doc.readingTime} 分钟
+            </span>
+          </div>
+
+          {doc.cover && (
+            <div className="mb-8 overflow-hidden rounded-card border border-border">
+              <SafeImage src={doc.cover} alt="" ratio="16 / 9" />
+            </div>
+          )}
+
+          <TableOfContents items={doc.toc} variant="inline" />
+          <Mdx source={doc.content} />
+
+          {doc.tags.length > 0 && (
+            <div className="mt-12 flex flex-wrap gap-2">
+              {doc.tags.map((t) => (
+                <TagChip key={t} name={t} />
+              ))}
+            </div>
+          )}
+
+          <Comments />
+        </article>
+        <TableOfContents items={doc.toc} variant="sidebar" />
+      </div>
+    </div>
+  );
+}

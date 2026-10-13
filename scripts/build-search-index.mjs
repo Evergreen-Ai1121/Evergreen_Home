@@ -1,0 +1,49 @@
+import fs from "node:fs";
+import path from "node:path";
+import matter from "gray-matter";
+
+const CONTENT = path.join(process.cwd(), "content");
+const OUT = path.join(process.cwd(), "public", "search-index.json");
+
+const COLLECTIONS = [
+  { dir: "notes", type: "notes", base: "/notes/" },
+  { dir: "posts", type: "posts", base: "/posts/" },
+  { dir: "projects", type: "projects", base: "/projects/" },
+];
+
+function stripMarkdown(body) {
+  return body
+    .replace(/```[\s\S]*?```/g, "")
+    .replace(/\$\$[\s\S]*?\$\$/g, "")
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, "")
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/[#>*`_|-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+const items = [];
+
+for (const c of COLLECTIONS) {
+  const dir = path.join(CONTENT, c.dir);
+  if (!fs.existsSync(dir)) continue;
+  for (const file of fs.readdirSync(dir).filter((f) => f.endsWith(".mdx"))) {
+    const raw = fs.readFileSync(path.join(dir, file), "utf8");
+    const { data, content } = matter(raw);
+    if (data.draft) continue;
+    const slug = file.replace(/\.mdx$/, "");
+    const summary = String(data.summary ?? data.description ?? "").slice(0, 120);
+    items.push({
+      type: c.type,
+      title: String(data.title ?? slug),
+      summary: summary || stripMarkdown(content).slice(0, 120),
+      tags: Array.isArray(data.tags) ? data.tags.map(String) : [],
+      url: `${c.base}${encodeURIComponent(slug)}`,
+      date: data.date ? String(data.date).slice(0, 10) : "",
+    });
+  }
+}
+
+fs.mkdirSync(path.dirname(OUT), { recursive: true });
+fs.writeFileSync(OUT, JSON.stringify(items));
+console.log(`search-index.json 已生成：${items.length} 条`);
