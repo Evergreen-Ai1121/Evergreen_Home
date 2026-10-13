@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ListTree } from "lucide-react";
+import { ListTree, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { TocItem } from "@/lib/content";
 
@@ -43,35 +43,35 @@ export function TableOfContents({
   variant = "sidebar",
 }: {
   items: TocItem[];
-  variant?: "sidebar" | "inline";
+  variant?: "sidebar" | "floating";
 }) {
   const activeId = useActiveId(items);
   const scrollRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef(new Map<string, HTMLAnchorElement>());
+  const [open, setOpen] = useState(false);
 
-  // 目录条目较多时，把当前章节滚到面板中部，保证始终看得见
+  // 当前章节始终滚进可见区域（居中偏上），目录再长也不会跟丢
   useEffect(() => {
     const box = scrollRef.current;
     const el = itemRefs.current.get(activeId);
-    if (!box || !el) return;
+    if (!box || !el || box.clientHeight === 0) return;
     const target = el.offsetTop - (box.clientHeight - el.offsetHeight) / 2;
     box.scrollTo({ top: Math.max(0, target), behavior: "smooth" });
-  }, [activeId]);
+  }, [activeId, open]);
 
   if (items.length === 0) return null;
 
   const list = (
-    <ul className="relative space-y-1 border-l border-border text-sm">
+    <ul className="space-y-0.5 text-sm">
       {items.map((item) => {
         const active = activeId === item.id;
         return (
           <li key={item.id} className="relative">
-            {/* 进度指示：当前章节左侧的高亮竖条 */}
             <span
               aria-hidden
               className={cn(
-                "absolute -left-px top-1 h-5 w-0.5 rounded-pill transition-colors duration-200",
-                active ? "bg-accent" : "bg-transparent",
+                "absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-pill bg-accent transition-opacity duration-200",
+                active ? "opacity-100" : "opacity-0",
               )}
             />
             <a
@@ -80,13 +80,14 @@ export function TableOfContents({
                 else itemRefs.current.delete(item.id);
               }}
               href={`#${item.id}`}
+              title={item.text}
               aria-current={active ? "location" : undefined}
               className={cn(
-                "block rounded-control py-1 pr-2 transition-colors duration-200",
-                item.depth === 3 ? "pl-7" : "pl-3",
+                "block truncate rounded-control py-1.5 pr-2 transition-colors duration-200",
+                item.depth === 3 ? "pl-6 text-[13px]" : "pl-3",
                 active
-                  ? "text-accent"
-                  : "text-text-muted [@media(hover:hover)]:hover:text-text",
+                  ? "bg-accent-soft text-accent"
+                  : "text-text-muted [@media(hover:hover)]:hover:bg-surface [@media(hover:hover)]:hover:text-text",
               )}
             >
               {item.text}
@@ -101,10 +102,10 @@ export function TableOfContents({
     return (
       // self-start 很关键：grid 子项默认被拉伸到整行高度，sticky 就没有可移动空间了
       <aside className="sticky top-24 hidden self-start desktop:block" aria-label="目录">
-        <p className="mb-3 text-xs uppercase tracking-wide text-text-muted">目录</p>
+        <p className="mb-3 pl-3 text-xs uppercase tracking-wide text-text-muted">目录</p>
         <div
           ref={scrollRef}
-          className="relative max-h-[calc(100dvh-12rem)] overflow-y-auto pr-1"
+          className="no-scrollbar max-h-[calc(100dvh-12rem)] overflow-y-auto pr-1"
         >
           {list}
         </div>
@@ -112,13 +113,37 @@ export function TableOfContents({
     );
   }
 
+  // 窄屏：左下角悬浮按钮 + 目录浮层（Frosti 的 MobileTOC 思路）
   return (
-    <details className="glass mb-6 rounded-card px-4 py-3 desktop:hidden">
-      <summary className="flex cursor-pointer items-center gap-2 text-sm text-text-muted">
-        <ListTree className="h-4 w-4" strokeWidth={1.5} />
-        目录
-      </summary>
-      <div className="mt-3">{list}</div>
-    </details>
+    <div className="desktop:hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-label={open ? "关闭目录" : "打开目录"}
+        className="fixed bottom-24 left-4 z-40 inline-flex h-10 w-10 items-center justify-center rounded-pill border border-border bg-surface-strong text-text-muted shadow-glass backdrop-blur transition-colors hover:text-accent tablet:bottom-8 tablet:left-8"
+      >
+        {open ? (
+          <X className="h-4 w-4" strokeWidth={1.5} />
+        ) : (
+          <ListTree className="h-4 w-4" strokeWidth={1.5} />
+        )}
+      </button>
+
+      {open && (
+        <div
+          className="glass-strong fixed bottom-40 left-4 z-40 w-64 animate-fade-up rounded-card p-4 tablet:bottom-24 tablet:left-8"
+          aria-label="目录"
+        >
+          <p className="mb-3 pl-3 text-xs uppercase tracking-wide text-text-muted">目录</p>
+          <div
+            ref={scrollRef}
+            className="no-scrollbar max-h-[50dvh] overflow-y-auto pr-1"
+          >
+            {list}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

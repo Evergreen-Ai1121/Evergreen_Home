@@ -68,7 +68,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
             </div>
           )}
 
-          <TableOfContents items={doc.toc} variant="inline" />
+          <TableOfContents items={doc.toc} variant="floating" />
           <Mdx source={doc.content} />
         </article>
         <TableOfContents items={doc.toc} variant="sidebar" />

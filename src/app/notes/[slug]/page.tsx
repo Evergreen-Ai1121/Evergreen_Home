@@ -45,7 +45,7 @@ export default async function NotePage({ params }: { params: Promise<{ slug: str
             </span>
           </div>
 
-          <TableOfContents items={doc.toc} variant="inline" />
+          <TableOfContents items={doc.toc} variant="floating" />
           <Mdx source={doc.content} />
 
           {doc.tags.length > 0 && (

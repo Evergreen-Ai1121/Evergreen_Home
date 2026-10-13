@@ -44,7 +44,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
             </div>
           )}
 
-          <TableOfContents items={doc.toc} variant="inline" />
+          <TableOfContents items={doc.toc} variant="floating" />
           <Mdx source={doc.content} />
 
           {doc.tags.length > 0 && (

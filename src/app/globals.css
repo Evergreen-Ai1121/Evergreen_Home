@@ -139,6 +139,14 @@
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
+  /* 目录等面板：可滚动但不显示滚动条 */
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 /* ── MDX 排版 ──────────────────────────────────────────── */
