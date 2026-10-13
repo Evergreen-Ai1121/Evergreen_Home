@@ -25,9 +25,9 @@ export default async function NotePage({ params }: { params: Promise<{ slug: str
   if (!doc) notFound();
 
   return (
-    <div className="wide:mx-auto wide:max-w-wide">
-      <div className="wide:grid wide:grid-cols-[720px_240px] wide:justify-center wide:gap-10">
-        <article className="mx-auto min-w-0 max-w-reading wide:mx-0">
+    <div className="desktop:mx-auto desktop:max-w-wide">
+      <div className="desktop:grid desktop:grid-cols-[720px_240px] desktop:justify-center desktop:gap-10">
+        <article className="mx-auto min-w-0 max-w-reading desktop:mx-0">
           <PageHeader title={doc.title} description={doc.summary} />
           <div className="mb-8 flex flex-wrap items-center gap-3 text-xs text-text-muted">
             {doc.category && (

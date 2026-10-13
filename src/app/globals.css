@@ -157,6 +157,11 @@
   --tw-prose-td-borders: var(--c-border);
 }
 
+/* 锚点跳转时给标题留出顶部空间（移动端顶栏 / 桌面留白） */
+.prose :is(h2, h3) {
+  scroll-margin-top: 96px;
+}
+
 .prose pre {
   background: rgba(15, 23, 42, 0.04) !important;
   border: 1px solid var(--c-border);
