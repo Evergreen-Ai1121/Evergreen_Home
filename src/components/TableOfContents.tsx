@@ -100,8 +100,11 @@ export function TableOfContents({
 
   if (variant === "sidebar") {
     return (
-      // self-start 很关键：grid 子项默认被拉伸到整行高度，sticky 就没有可移动空间了
-      <aside className="sticky top-24 hidden self-start desktop:block" aria-label="目录">
+      // fixed 而非 sticky：sticky 到容器底部就会失效，滚到文章末尾目录会飘走
+      <aside
+        className="toc-rail fixed top-24 z-30 hidden w-60 desktop:block"
+        aria-label="目录"
+      >
         <p className="mb-3 pl-3 text-xs uppercase tracking-wide text-text-muted">目录</p>
         <div
           ref={scrollRef}

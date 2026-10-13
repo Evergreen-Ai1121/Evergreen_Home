@@ -139,6 +139,12 @@
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
+  /* 目录面板：fixed 定位时对齐到正文右侧的 240px 目录轨道。
+     推导：内容区起点 112px（64 侧栏 + 48 内边距），正文 720 + 间距 40 + 目录 240 = 1000，
+     目录右边缘 = 112 + (可用宽 - 1000)/2 + 1000，换算成距视口右边 = 100vw - 1112 - (100vw - 1160)/2 */
+  .toc-rail {
+    right: calc(100vw - 1112px - (100vw - 1160px) / 2);
+  }
   /* 目录等面板：可滚动但不显示滚动条 */
   .no-scrollbar {
     scrollbar-width: none;
