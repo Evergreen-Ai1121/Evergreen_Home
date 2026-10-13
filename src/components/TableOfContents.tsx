@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ListTree } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { TocItem } from "@/lib/content";
@@ -46,6 +46,18 @@ export function TableOfContents({
   variant?: "sidebar" | "inline";
 }) {
   const activeId = useActiveId(items);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const itemRefs = useRef(new Map<string, HTMLAnchorElement>());
+
+  // 目录条目较多时，把当前章节滚到面板中部，保证始终看得见
+  useEffect(() => {
+    const box = scrollRef.current;
+    const el = itemRefs.current.get(activeId);
+    if (!box || !el) return;
+    const target = el.offsetTop - (box.clientHeight - el.offsetHeight) / 2;
+    box.scrollTo({ top: Math.max(0, target), behavior: "smooth" });
+  }, [activeId]);
+
   if (items.length === 0) return null;
 
   const list = (
@@ -63,6 +75,10 @@ export function TableOfContents({
               )}
             />
             <a
+              ref={(node) => {
+                if (node) itemRefs.current.set(item.id, node);
+                else itemRefs.current.delete(item.id);
+              }}
               href={`#${item.id}`}
               aria-current={active ? "location" : undefined}
               className={cn(
@@ -83,9 +99,15 @@ export function TableOfContents({
 
   if (variant === "sidebar") {
     return (
-      <aside className="sticky top-24 hidden desktop:block" aria-label="目录">
+      // self-start 很关键：grid 子项默认被拉伸到整行高度，sticky 就没有可移动空间了
+      <aside className="sticky top-24 hidden self-start desktop:block" aria-label="目录">
         <p className="mb-3 text-xs uppercase tracking-wide text-text-muted">目录</p>
-        {list}
+        <div
+          ref={scrollRef}
+          className="relative max-h-[calc(100dvh-12rem)] overflow-y-auto pr-1"
+        >
+          {list}
+        </div>
       </aside>
     );
   }
