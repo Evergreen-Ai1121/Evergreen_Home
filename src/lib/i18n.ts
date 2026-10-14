@@ -14,6 +14,9 @@ const zh = {
   "nav.moments": "说说",
   "nav.projects": "作品",
   "nav.about": "关于",
+  "social.github": "GitHub",
+  "social.mail": "邮箱",
+  "social.rss": "RSS",
   "nav.tags": "标签",
   "nav.archive": "归档",
 
@@ -100,6 +103,9 @@ const en: Record<keyof typeof zh, string> = {
   "nav.moments": "Moments",
   "nav.projects": "Projects",
   "nav.about": "About",
+  "social.github": "GitHub",
+  "social.mail": "Email",
+  "social.rss": "RSS",
   "nav.tags": "Tags",
   "nav.archive": "Archive",
 

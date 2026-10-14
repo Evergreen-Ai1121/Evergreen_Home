@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
+import Link from "next/link";
 import "./globals.css";
 import "katex/dist/katex.min.css";
+import { getAllTags } from "@/lib/content";
 import { site } from "@/lib/site";
 import { GlowBackground } from "@/components/GlowBackground";
 import { SearchProvider } from "@/components/SearchProvider";
@@ -62,8 +64,35 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               >
                 {children}
               </main>
-              <footer className="hidden px-8 pb-10 text-xs text-text-muted desktop:block">
-                © {new Date().getFullYear()} {site.author} · <T k="footer.builtWith" />
+              <footer className="hidden px-8 pb-10 desktop:block">
+                <ul className="mb-3 flex flex-wrap items-center gap-2">
+                  <li className="text-xs text-text-muted">
+                    <T k="label.tags" />
+                  </li>
+                  {getAllTags()
+                    .slice(0, 8)
+                    .map((t) => (
+                      <li key={t.name}>
+                        <Link
+                          href={`/tags/${encodeURIComponent(t.name)}`}
+                          className="rounded-pill border border-border px-2.5 py-0.5 text-xs text-text-muted transition-colors hover:text-accent"
+                        >
+                          #{t.name}
+                        </Link>
+                      </li>
+                    ))}
+                  <li>
+                    <Link
+                      href="/tags"
+                      className="text-xs text-text-muted transition-colors hover:text-accent"
+                    >
+                      <T k="action.viewAll" /> →
+                    </Link>
+                  </li>
+                </ul>
+                <p className="text-xs text-text-muted">
+                  © {new Date().getFullYear()} {site.author} · <T k="footer.builtWith" />
+                </p>
               </footer>
             </div>
             <BottomTabBar />

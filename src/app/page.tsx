@@ -6,7 +6,6 @@ import { site } from "@/lib/site";
 import { ContentCard, ProjectCard } from "@/components/Cards";
 import { MomentItem } from "@/components/MomentItem";
 import { EmptyState } from "@/components/PageHeader";
-import { ProfilePanel, TagCloudPanel } from "@/components/HomePanels";
 import { T } from "@/components/LangProvider";
 
 export const revalidate = 300;
@@ -47,12 +46,6 @@ export default async function HomePage() {
             <ArrowRight className="h-4 w-4" strokeWidth={1.5} />
           </Link>
         </div>
-      </section>
-
-      {/* 简介 + 标签云 + RSS */}
-      <section className="mt-10 grid items-start gap-4 tablet:grid-cols-[300px_1fr]">
-        <ProfilePanel />
-        <TagCloudPanel />
       </section>
 
       {/* 最新文章 */}

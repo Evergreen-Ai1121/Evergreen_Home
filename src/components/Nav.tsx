@@ -6,6 +6,7 @@ import {
   Archive,
   Github,
   Home,
+  Rss,
   BookOpen,
   FileText,
   Mail,
@@ -30,21 +31,42 @@ function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(href + "/");
 }
 
-function Logo() {
+/** withAvatar 只给桌面侧栏用：头像 + 站名 + 一句话，整体可点回首页 */
+function Logo({ withAvatar = false }: { withAvatar?: boolean }) {
   return (
-    <Link
-      href="/"
-      className="text-[17px] font-semibold tracking-tight text-text hover:text-accent"
-    >
-      {site.name}
-      <span className="ml-2 hidden text-xs font-normal text-text-muted tablet:inline">
-        {site.tagline}
+    <Link href="/" className="flex min-w-0 items-center gap-3">
+      {withAvatar && (
+        /* eslint-disable-next-line @next/next/no-img-element */
+        <img
+          src={site.avatar}
+          alt=""
+          width={56}
+          height={56}
+          className="h-14 w-14 shrink-0 rounded-pill border border-border bg-surface object-cover"
+        />
+      )}
+      <span className="min-w-0">
+        <span className="block truncate text-[17px] font-semibold tracking-tight text-text">
+          {site.name}
+        </span>
+        <span className="mt-0.5 hidden truncate text-xs font-normal text-text-muted tablet:block">
+          {site.tagline}
+        </span>
       </span>
     </Link>
   );
 }
 
 const SOCIAL_ICONS = { github: Github, mail: Mail } as const;
+
+/** 侧栏底部那排外链：站点社交链接 + RSS 入口（标签按 key 走字典，英文态别露出中文） */
+function useSocialEntries() {
+  const { t } = useLang();
+  return [
+    ...site.social.map((s) => ({ ...s, label: t((`social.${s.key}`) as Parameters<typeof t>[0]), internal: false })),
+    { key: "rss", label: t("social.rss"), href: "/rss.xml", internal: true },
+  ];
+}
 
 /** 导航项 key 直接对应字典里的 nav.* */
 function useNavLabel() {
@@ -56,11 +78,12 @@ function useNavLabel() {
 export function SideNav() {
   const pathname = usePathname();
   const tNav = useNavLabel();
+  const socialEntries = useSocialEntries();
   return (
     <aside className="fixed left-0 top-0 z-40 hidden h-dvh w-60 flex-col justify-between border-r border-border bg-surface px-5 py-6 backdrop-blur desktop:flex">
       <div>
         <div className="px-1">
-          <Logo />
+          <Logo withAvatar />
         </div>
         <nav aria-label="主导航" className="mt-8">
           <ul className="space-y-1">
@@ -115,22 +138,25 @@ export function SideNav() {
       </div>
 
       <div className="space-y-4">
+        {/* 两个图标按钮必须 shrink-0：英文下「Search ⌘K」变长会把它们压变形 */}
         <div className="flex items-center gap-2">
-          <SearchTrigger withHint className="flex-1" />
-          <LangToggle />
-          <ThemeToggle />
+          <SearchTrigger withHint className="min-w-0 flex-1" />
+          <LangToggle className="shrink-0" />
+          <ThemeToggle className="shrink-0" />
         </div>
-        <div className="flex gap-2 px-1">
-          {site.social.map((s) => {
-            const Icon = SOCIAL_ICONS[s.key as keyof typeof SOCIAL_ICONS];
+        <div className="flex flex-wrap gap-2 px-1">
+          {socialEntries.map((s) => {
+            const Icon =
+              s.key === "rss" ? Rss : SOCIAL_ICONS[s.key as keyof typeof SOCIAL_ICONS];
             return (
               <a
                 key={s.href}
                 href={s.href}
                 aria-label={s.label}
-                target={s.href.startsWith("http") ? "_blank" : undefined}
-                rel={s.href.startsWith("http") ? "noreferrer" : undefined}
-                className="rounded-control p-2 text-text-muted transition-colors hover:text-accent"
+                title={s.label}
+                target={s.internal ? undefined : s.href.startsWith("http") ? "_blank" : undefined}
+                rel={!s.internal && s.href.startsWith("http") ? "noreferrer" : undefined}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-control text-text-muted transition-colors hover:text-accent"
               >
                 <Icon className="h-[18px] w-[18px]" strokeWidth={1.5} />
               </a>

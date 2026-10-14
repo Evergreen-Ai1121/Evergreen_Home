@@ -23,6 +23,8 @@ export const site = {
     { label: "GitHub", href: "https://github.com/", key: "github" },
     { label: "邮箱", href: "mailto:aievergreen@qq.com", key: "mail" },
   ],
+  /** 侧栏顶部的头像（放 public/ 下，换图只改这一行） */
+  avatar: "/images/cover-start.svg",
   giscus: {
     repo: process.env.NEXT_PUBLIC_GISCUS_REPO ?? "",
     repoId: process.env.NEXT_PUBLIC_GISCUS_REPO_ID ?? "",
