@@ -46,7 +46,7 @@ function Logo({ withAvatar = false }: { withAvatar?: boolean }) {
         />
       )}
       <span className="min-w-0">
-        <span className="block truncate text-[17px] font-semibold tracking-tight text-text">
+        <span className="font-display block truncate text-[19px] text-text">
           {site.name}
         </span>
         <span className="mt-0.5 hidden truncate text-xs font-normal text-text-muted tablet:block">

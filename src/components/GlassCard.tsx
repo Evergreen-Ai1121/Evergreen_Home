@@ -16,7 +16,7 @@ export function GlassCard({
         strong ? "glass-strong" : "glass",
         "rounded-card",
         interactive &&
-          "transition-[transform,box-shadow,background-color] duration-200 ease-out [@media(hover:hover)]:hover:-translate-y-0.5 [@media(hover:hover)]:hover:bg-surface-strong",
+          "transition-[transform,box-shadow,background-color] duration-200 ease-out [@media(hover:hover)]:hover:-translate-y-0.5 [@media(hover:hover)]:hover:bg-surface-strong [@media(hover:hover)]:hover:shadow-[0_10px_36px_-14px_rgba(88,60,180,0.3)]",
         className,
       )}
       {...rest}

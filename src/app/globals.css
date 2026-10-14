@@ -2,23 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── 自托管字体 ─────────────────────────────────────────── */
+/* 得意黑（Smiley Sans）：标题展示字体，正文不使用；本地加载，无第三方字体请求。
+   已子集化到标题/站名实际用到的 280 个字（见 scripts/subset-display-font.mjs），仅 27KB */
+@font-face {
+  font-family: "Smiley Sans";
+  src: url("/fonts/SmileySans-Oblique.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* ── 设计令牌 ───────────────────────────────────────────── */
 :root {
+  --font-display: "Smiley Sans", "PingFang SC", "Microsoft YaHei", sans-serif;
   --c-bg: #f6f8fc;
   --c-surface: rgba(255, 255, 255, 0.62);
   --c-surface-strong: rgba(255, 255, 255, 0.85);
   --c-border: rgba(15, 23, 42, 0.08);
   --c-text: #1b1f27;
-  /* 次级文本要能在背景光斑（实测最亮处到 #cacffe）上也过 AA，所以比“看着舒服”再深一档 */
-  --c-text-muted: #4d5666;
-  /* 蓝色要比"好看"更深一档：#5b8def 在浅底上只有 3.0:1，正文链接与白字按钮都过不了 AA；
-     取 #2c50a8 是为了连背景光斑压过、还叠了 accent-soft 底的地方（目录高亮项实测 #c9caf2）也还能到 4.5:1 */
-  --c-accent: #2c50a8;
-  --c-accent-soft: rgba(44, 80, 168, 0.14);
-  --c-glow-a: rgba(168, 200, 255, 0.55);
-  --c-glow-b: rgba(201, 188, 255, 0.45);
-  --c-glow-c: rgba(182, 231, 255, 0.45);
-  --c-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 12px 32px -16px rgba(15, 23, 42, 0.12);
+  /* 次级文本要能在背景光斑（实测最亮处到 #cacffe）上也过 AA，所以比"看着舒服"再深一档 */
+  --c-text-muted: #475263;
+  /* 紫罗兰主色：浅色下压到 #5B3FC4 是为了连光斑压过的地方（实测背景 #cacffe）也能到 4.5:1 */
+  --c-accent: #5b3fc4;
+  --c-accent-soft: rgba(109, 79, 208, 0.12);
+  --c-glow-a: rgba(167, 139, 250, 0.5);
+  --c-glow-b: rgba(196, 181, 253, 0.45);
+  --c-glow-c: rgba(147, 197, 253, 0.4);
+  --c-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 12px 32px -16px rgba(88, 60, 180, 0.16);
   --c-scrim: rgba(246, 248, 252, 0.72);
   color-scheme: light;
 }
@@ -27,14 +38,16 @@
   --c-bg: #0b0e14;
   --c-surface: rgba(255, 255, 255, 0.055);
   --c-surface-strong: rgba(255, 255, 255, 0.09);
-  --c-border: rgba(255, 255, 255, 0.1);
+  /* 深色下边框稍亮一点，卡片轮廓在纯黑背景上才立得住 */
+  --c-border: rgba(255, 255, 255, 0.13);
   --c-text: #e6e9ef;
   --c-text-muted: #99a2b2;
-  --c-accent: #7aa2ff;
-  --c-accent-soft: rgba(122, 162, 255, 0.22);
-  --c-glow-a: rgba(90, 130, 220, 0.22);
-  --c-glow-b: rgba(120, 100, 200, 0.2);
-  --c-glow-c: rgba(80, 160, 210, 0.18);
+  --c-accent: #a78bfa;
+  --c-accent-soft: rgba(167, 139, 250, 0.2);
+  /* 深色光斑整体加强一档，避免大面积死黑显平 */
+  --c-glow-a: rgba(124, 92, 224, 0.3);
+  --c-glow-b: rgba(167, 139, 250, 0.24);
+  --c-glow-c: rgba(96, 165, 250, 0.2);
   --c-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   --c-scrim: rgba(6, 8, 12, 0.72);
   color-scheme: dark;
@@ -71,8 +84,17 @@
     letter-spacing: 0.01em;
   }
 
+  /* 一二级标题用得意黑（自带倾斜的展示字体，只有 400 一档，禁用合成加粗避免发虚）；
+     三四级以下保持系统字体，避免满屏倾斜 */
   h1,
-  h2,
+  h2 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-synthesis: none;
+    line-height: 1.25;
+    letter-spacing: 0.01em;
+  }
+
   h3,
   h4 {
     line-height: 1.25;
@@ -121,6 +143,12 @@
     box-shadow: var(--c-shadow);
   }
 
+  /* Logo 也用得意黑，和标题一个声音 */
+  .font-display {
+    font-family: var(--font-display);
+    font-synthesis: none;
+  }
+
   .skip-link {
     position: absolute;
     left: -9999px;
@@ -156,6 +184,29 @@
   }
   .no-scrollbar::-webkit-scrollbar {
     display: none;
+  }
+  /* 全站细滚动条：低对比、圆角，不抢内容 */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--c-text-muted) 40%, transparent) transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--c-text-muted) 35%, transparent);
+    border-radius: 999px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb, var(--c-text-muted) 55%, transparent);
+    background-clip: content-box;
+    border: 3px solid transparent;
   }
 }
 
@@ -223,13 +274,12 @@
   color: var(--c-text-muted);
 }
 
+/* 代码块外壳由 CodeBlock 组件自己描边圆角，这里只管代码区本身 */
 .prose pre {
-  background: rgba(15, 23, 42, 0.04) !important;
-  border: 1px solid var(--c-border);
-  border-radius: 12px;
+  background: transparent !important;
 }
 .dark .prose pre {
-  background: rgba(255, 255, 255, 0.04) !important;
+  background: transparent !important;
 }
 
 /* 正文里的链接不能只靠颜色区分（WCAG 1.4.1）：正文段落与列表里的链接加下划线。

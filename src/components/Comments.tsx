@@ -159,7 +159,7 @@ export function Comments({ slug }: { slug: string }) {
   return (
     <section aria-label={t("label.comments")} className="mt-16">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold">
+        <h2 className="text-lg">
           {t("label.comments")}
           <span className="ml-2 text-sm font-normal text-text-muted">{items.length}</span>
         </h2>

@@ -26,7 +26,7 @@ export function MomentItem({ moment }: { moment: Moment }) {
         />
       )}
       <time
-        className="mt-4 block text-xs text-text-muted"
+        className="mt-4 inline-block rounded-pill bg-surface-strong px-2.5 py-0.5 text-xs text-text-muted"
         dateTime={moment.createdAt}
       >
         {formatMomentTime(moment.createdAt)}

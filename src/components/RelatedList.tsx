@@ -19,7 +19,7 @@ export function RelatedList({ items }: { items: DocMeta[] }) {
   if (items.length === 0) return null;
   return (
     <section aria-label="相关推荐" className="mt-12">
-      <h2 className="mb-3 text-lg font-semibold">{t("label.related")}</h2>
+      <h2 className="mb-3 text-lg">{t("label.related")}</h2>
       <div className="grid gap-3 tablet:grid-cols-3">
         {items.map((d) => (
           <GlassCard key={`${d.type}-${d.slug}`} interactive>

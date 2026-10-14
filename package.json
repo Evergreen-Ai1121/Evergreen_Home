@@ -12,6 +12,8 @@
     "typecheck": "tsc --noEmit",
     "search-index": "node scripts/build-search-index.mjs",
     "content-images": "node scripts/sync-content-images.mjs",
+    "font:charset": "node scripts/build-font-charset.mjs",
+    "font:subset": "node scripts/build-font-charset.mjs && node scripts/subset-display-font.mjs",
     "db:init": "node scripts/init-db.mjs"
   },
   "dependencies": {
@@ -44,6 +46,7 @@
     "@types/react-dom": "^19.0.3",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.49",
+    "subset-font": "^2.9.0",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.7.3"
   }

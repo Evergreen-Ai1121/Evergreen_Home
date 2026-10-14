@@ -22,7 +22,7 @@ export default async function HomePage() {
       {/* Hero */}
       <section className="py-8 tablet:py-16 desktop:py-20">
         <p className="text-sm text-text-muted">{site.tagline}</p>
-        <h1 className="mt-3 text-balance text-[clamp(32px,6vw,56px)] font-semibold leading-[1.15]">
+        <h1 className="mt-3 text-balance text-[clamp(32px,6vw,56px)] leading-[1.15]">
           把笔记、想法和作品，
           <br className="hidden tablet:block" />
           放在同一个自己能掌控的地方。
@@ -40,7 +40,7 @@ export default async function HomePage() {
           </Link>
           <Link
             href="/projects"
-            className="inline-flex items-center gap-1 rounded-control bg-accent px-4 py-2 text-sm text-white transition-opacity hover:opacity-90"
+            className="inline-flex items-center gap-1 rounded-control bg-accent px-4 py-2 text-sm text-white shadow-[0_8px_24px_-12px_rgba(88,60,180,0.6)] transition-[transform,box-shadow] duration-200 ease-out [@media(hover:hover)]:hover:-translate-y-0.5"
           >
             作品集
             <ArrowRight className="h-4 w-4" strokeWidth={1.5} />
@@ -110,7 +110,7 @@ function SectionTitle({
 }) {
   return (
     <div className="mb-4 flex items-baseline justify-between">
-      <h2 id={id} className="text-lg font-semibold">
+      <h2 id={id} className="text-lg">
         <T k={k} />
       </h2>
       <Link

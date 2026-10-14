@@ -41,7 +41,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
 
           {doc.cover && (
             <div className="mb-8 overflow-hidden rounded-card border border-border">
-              <SafeImage src={doc.cover} alt="" ratio="16 / 9" />
+              <SafeImage src={doc.cover} alt="" ratio="16 / 9" loading="eager" fetchPriority="high" />
             </div>
           )}
 

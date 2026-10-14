@@ -12,9 +12,11 @@ export function SafeImage({
   alt,
   className,
   ratio = "16 / 9",
+  loading = "lazy",
   ...rest
 }: React.ImgHTMLAttributes<HTMLImageElement> & { ratio?: string }) {
   const [failed, setFailed] = useState(false);
+  const decoding = loading === "eager" ? "sync" : "async";
 
   if (failed || !src) {
     return (
@@ -39,8 +41,8 @@ export function SafeImage({
     <img
       src={src}
       alt={alt}
-      loading="lazy"
-      decoding="async"
+      loading={loading}
+      decoding={decoding}
       onError={() => setFailed(true)}
       style={{ aspectRatio: ratio }}
       className={cn("h-full w-full object-cover", className)}

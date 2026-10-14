@@ -4,6 +4,7 @@ import { getAllTags } from "@/lib/content";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { T } from "@/components/LangProvider";
 import { cn } from "@/lib/utils";
+import { tagColor } from "@/lib/tag-color";
 
 export const metadata = { title: "标签" };
 
@@ -36,13 +37,14 @@ export default function TagsPage() {
                 <Link
                   href={`/tags/${encodeURIComponent(t.name)}`}
                   className={cn(
-                    "inline-flex items-center gap-1 rounded-pill border border-border bg-surface px-3 py-1 text-text-muted transition-colors hover:text-accent",
+                    "inline-flex items-center gap-1.5 rounded-pill border border-transparent px-3 py-1 transition-opacity hover:opacity-80",
+                    tagColor(t.name),
                     sizeOf(t.count, max),
                   )}
                 >
-                  <Tag className="h-3.5 w-3.5" strokeWidth={1.5} />
+                  <Tag className="h-3.5 w-3.5 opacity-70" strokeWidth={1.5} />
                   {t.name}
-                  <span className="text-xs text-text-muted">{t.count}</span>
+                  <span className="text-xs opacity-70">{t.count}</span>
                 </Link>
               </li>
             ))}

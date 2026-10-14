@@ -13,7 +13,7 @@ export function PageHeader({
 }) {
   return (
     <header className={cn("mb-8", className)}>
-      <h1 className="text-balance text-[clamp(28px,5vw,48px)] font-semibold leading-tight">
+      <h1 className="text-balance text-[clamp(28px,5vw,48px)] leading-tight">
         {title}
       </h1>
       {description && (

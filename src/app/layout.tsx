@@ -4,6 +4,7 @@ import "./globals.css";
 import "katex/dist/katex.min.css";
 import { getAllTags } from "@/lib/content";
 import { site } from "@/lib/site";
+import { TagChip } from "@/components/Cards";
 import { GlowBackground } from "@/components/GlowBackground";
 import { SearchProvider } from "@/components/SearchProvider";
 import { LangProvider } from "@/components/LangProvider";
@@ -73,12 +74,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     .slice(0, 8)
                     .map((t) => (
                       <li key={t.name}>
-                        <Link
-                          href={`/tags/${encodeURIComponent(t.name)}`}
-                          className="rounded-pill border border-border px-2.5 py-0.5 text-xs text-text-muted transition-colors hover:text-accent"
-                        >
-                          #{t.name}
-                        </Link>
+                        <TagChip name={t.name} href={`/tags/${encodeURIComponent(t.name)}`} />
                       </li>
                     ))}
                   <li>

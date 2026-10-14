@@ -165,12 +165,15 @@ export function TableOfContents({
         className="toc-rail fixed top-24 z-30 hidden w-60 desktop:block"
         aria-label="目录"
       >
-        <p className="mb-3 pl-3 text-xs uppercase tracking-wide text-text-muted">目录</p>
-        <div
-          ref={scrollRef}
-          className="no-scrollbar relative max-h-[calc(100dvh-12rem)] overflow-y-auto pr-1"
-        >
-          {list}
+        {/* 卡片化：和正文一样是一块玻璃面板，而不是裸列表 */}
+        <div className="glass rounded-card p-4">
+          <p className="mb-3 pl-1 text-xs uppercase tracking-wide text-text-muted">目录</p>
+          <div
+            ref={scrollRef}
+            className="no-scrollbar relative max-h-[calc(100dvh-14rem)] overflow-y-auto pr-1"
+          >
+            {list}
+          </div>
         </div>
       </aside>
     );
