@@ -19,6 +19,11 @@ const zh = {
   "social.rss": "RSS",
   "nav.tags": "标签",
   "nav.archive": "归档",
+  "page.projects": "作品集",
+  "desc.posts": "有开头也有结尾的完整表达，包括日记和随笔。",
+  "desc.notes": "整理过的、可以反复查阅的东西。按分类与标签组织，按年份归档。",
+  "desc.moments": "此刻的想法、拍到的照片、刚调通的小功能。",
+  "desc.projects": "不只要说做了什么，还要说清楚遇到什么问题、怎么想的、我负责哪部分。",
 
   "action.search": "搜索",
   "action.close": "关闭",
@@ -108,6 +113,11 @@ const en: Record<keyof typeof zh, string> = {
   "social.rss": "RSS",
   "nav.tags": "Tags",
   "nav.archive": "Archive",
+  "page.projects": "Projects",
+  "desc.posts": "Complete pieces with a beginning and an end — diaries and essays.",
+  "desc.notes": "Organised, worth revisiting material — grouped by category and tag, archived by year.",
+  "desc.moments": "Thoughts of the moment, photos I took, small features I just got working.",
+  "desc.projects": "Not just what I built — the problems I hit, how I thought it through, and which parts were mine.",
 
   "action.search": "Search",
   "action.close": "Close",

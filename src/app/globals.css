@@ -4,7 +4,9 @@
 
 /* ── 自托管字体 ─────────────────────────────────────────── */
 /* 得意黑（Smiley Sans）：标题展示字体，正文不使用；本地加载，无第三方字体请求。
-   已子集化到标题/站名实际用到的 280 个字（见 scripts/subset-display-font.mjs），仅 27KB */
+   已子集化到标题/站名/404 等实际出现的中文（见 scripts/build-font-charset.mjs），约 106KB。
+   得意黑比 PingFang/微软雅黑窄（实测 0.8×），若直接 swap 会让标题在慢网下多换行、加载后回流，
+   拖出 CLS。下面这枚本地回退面用 size-adjust 把系统字拉到同宽，swap 时不再重排。 */
 @font-face {
   font-family: "Smiley Sans";
   src: url("/fonts/SmileySans-Oblique.woff2") format("woff2");
@@ -12,10 +14,16 @@
   font-style: normal;
   font-display: swap;
 }
+@font-face {
+  font-family: "Smiley Sans Fallback";
+  src: local("PingFang SC"), local("Microsoft YaHei"), local("sans-serif");
+  size-adjust: 80%;
+  line-gap-override: 0%;
+}
 
 /* ── 设计令牌 ───────────────────────────────────────────── */
 :root {
-  --font-display: "Smiley Sans", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-display: "Smiley Sans", "Smiley Sans Fallback", "PingFang SC", "Microsoft YaHei", sans-serif;
   --c-bg: #f6f8fc;
   --c-surface: rgba(255, 255, 255, 0.62);
   --c-surface-strong: rgba(255, 255, 255, 0.85);

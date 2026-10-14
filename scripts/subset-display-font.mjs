@@ -5,9 +5,11 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import subsetFont from "subset-font";
 
+// 全量字体源（已入库，保证随时可重跑子集）
+const SRC_FONT = join(process.cwd(), "assets/fonts/SmileySans-Oblique.otf");
 const OUT = join(process.cwd(), "public/fonts/SmileySans-Oblique.woff2");
 const charset = readFileSync(join(process.cwd(), "public/fonts/charset.txt"), "utf8");
-const buf = readFileSync(OUT);
+const buf = readFileSync(SRC_FONT);
 
 const subset = await subsetFont(buf, charset, { formats: ["woff2"] });
 writeFileSync(OUT, subset);

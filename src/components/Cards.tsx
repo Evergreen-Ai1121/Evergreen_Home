@@ -1,28 +1,19 @@
 import Link from "next/link";
 import { ArrowUpRight, Clock, Tag } from "lucide-react";
 import type { DocMeta } from "@/lib/content";
-import { tagColor } from "@/lib/tag-color";
 import { cn } from "@/lib/utils";
 import { GlassCard } from "./GlassCard";
 import { SafeImage } from "./SafeImage";
 
-/** 标签药丸：按名字固定分配颜色，带一个小色点 */
+/** 标签药丸：全站统一 accent 底色，和分类徽标一致 */
 export function TagChip({ name, href }: { name: string; href?: string }) {
-  const cls = cn(
-    "inline-flex items-center gap-1 rounded-pill border border-transparent px-2.5 py-0.5 text-xs",
-    tagColor(name),
-  );
-  const dot = <span aria-hidden className="h-1.5 w-1.5 rounded-pill bg-current opacity-60" />;
+  const cls = "inline-flex items-center rounded-pill bg-accent-soft px-2.5 py-0.5 text-xs text-accent";
   return href ? (
     <Link href={href} className={cn(cls, "transition-opacity hover:opacity-80")}>
-      {dot}
       {name}
     </Link>
   ) : (
-    <span className={cls}>
-      {dot}
-      {name}
-    </span>
+    <span className={cls}>{name}</span>
   );
 }
 

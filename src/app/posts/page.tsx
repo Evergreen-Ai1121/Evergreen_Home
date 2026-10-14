@@ -2,6 +2,7 @@ import { getCollection, getTags } from "@/lib/content";
 import { ContentCard } from "@/components/Cards";
 import { Pagination } from "@/components/Pagination";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
+import { T } from "@/components/LangProvider";
 import { TagFilter } from "@/components/TagFilter";
 
 export const metadata = { title: "文章" };
@@ -30,7 +31,7 @@ export default async function PostsPage({
 
   return (
     <div className="mx-auto max-w-wide">
-      <PageHeader title="文章" description="有开头也有结尾的完整表达，包括日记和随笔。" />
+      <PageHeader title={<T k="nav.posts" />} description={<T k="desc.posts" />} />
       <TagFilter basePath="/posts" tags={getTags("posts")} active={tag} />
       {posts.length === 0 ? (
         <EmptyState>这个标签下还没有文章。</EmptyState>

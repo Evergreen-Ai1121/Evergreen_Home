@@ -192,7 +192,8 @@ export function SearchOverlay({ onClose }: { onClose: () => void }) {
       label: t(GROUP_LABEL[type]),
       items: results.filter((r) => r.doc.type === type),
     })).filter((g) => g.items.length > 0);
-  }, [results]);
+    // t 依赖：浮层开着切语言时分组标题也要跟着换
+  }, [results, t]);
 
   const flat = useMemo(() => grouped.flatMap((g) => g.items), [grouped]);
 
@@ -242,7 +243,7 @@ export function SearchOverlay({ onClose }: { onClose: () => void }) {
       ref={dialogRef}
       role="dialog"
       aria-modal="true"
-      aria-label="站内搜索"
+      aria-label={t("action.search")}
       className="fixed inset-0 z-50 flex items-start justify-center px-4 pt-[10vh] tablet:pt-[14vh]"
     >
       <div
@@ -262,7 +263,7 @@ export function SearchOverlay({ onClose }: { onClose: () => void }) {
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t("search.placeholder")}
             className="w-full bg-transparent text-base outline-none placeholder:text-text-muted"
-            aria-label="搜索关键词"
+            aria-label={t("action.search")}
           />
           {status === "loading" && (
             <Loader2 className="h-4 w-4 animate-spin text-text-muted" strokeWidth={1.5} />

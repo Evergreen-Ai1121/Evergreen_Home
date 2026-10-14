@@ -2,6 +2,7 @@ import { getCollection, getTags } from "@/lib/content";
 import { ProjectCard } from "@/components/Cards";
 import { Pagination } from "@/components/Pagination";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
+import { T } from "@/components/LangProvider";
 import { TagFilter } from "@/components/TagFilter";
 
 export const metadata = { title: "作品集" };
@@ -31,8 +32,8 @@ export default async function ProjectsPage({
   return (
     <div className="mx-auto max-w-wide">
       <PageHeader
-        title="作品集"
-        description="不只要说做了什么，还要说清楚遇到什么问题、怎么想的、我负责哪部分。"
+        title={<T k="page.projects" />}
+        description={<T k="desc.projects" />}
       />
       <TagFilter basePath="/projects" tags={getTags("projects")} active={tag} />
       {projects.length === 0 ? (

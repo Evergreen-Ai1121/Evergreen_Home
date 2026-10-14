@@ -47,6 +47,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="zh-CN" suppressHydrationWarning>
       <head>
+        <link
+          rel="preload"
+          href="/fonts/SmileySans-Oblique.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body className="font-sans antialiased">
@@ -54,8 +61,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           跳到主要内容
         </a>
         <GlowBackground />
-        <SearchProvider>
-          <LangProvider>
+        <LangProvider>
+          <SearchProvider>
             <SideNav />
             <div className="desktop:pl-60">
               <TopBar />
@@ -93,8 +100,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
             <BottomTabBar />
             <ScrollToTop />
-          </LangProvider>
-        </SearchProvider>
+          </SearchProvider>
+        </LangProvider>
       </body>
     </html>
   );

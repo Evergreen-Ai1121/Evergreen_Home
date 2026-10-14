@@ -3,6 +3,7 @@ import { getCollection, getCategories, getTags, type DocMeta } from "@/lib/conte
 import { NoteItem } from "@/components/Cards";
 import { Pagination } from "@/components/Pagination";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
+import { T } from "@/components/LangProvider";
 import { cn } from "@/lib/utils";
 
 export const metadata = { title: "笔记" };
@@ -50,8 +51,8 @@ export default async function NotesPage({
   return (
     <div className="mx-auto max-w-wide">
       <PageHeader
-        title="笔记"
-        description="整理过的、可以反复查阅的东西。按分类与标签组织，按年份归档。"
+        title={<T k="nav.notes" />}
+        description={<T k="desc.notes" />}
       />
 
       <div className="mb-8 space-y-4">
