@@ -13,7 +13,7 @@ export function License({ title, path }: { title: string; path: string }) {
           href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans"
           target="_blank"
           rel="noreferrer noopener"
-          className="text-accent"
+          className="text-accent underline"
         >
           CC BY-NC-SA 4.0
         </a>

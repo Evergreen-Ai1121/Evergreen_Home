@@ -1,6 +1,7 @@
 ---
 title: 目录压力测试（临时稿）
 date: 2026-10-13
+updated: 2026-10-14
 summary: 用于验证超长目录在滚动时的稳定性：章节数量远超一屏，目录面板需要自动跟随且不抖动。
 tags: [测试, 目录]
 draft: true
@@ -139,3 +140,148 @@ draft: true
 ### 20.2 结束
 
 结束占位文本。
+
+## 代码块干扰测试
+
+下面两段代码里的注释都以 `#` 开头，**不应该出现在目录里**：
+
+```bash
+# 这不是标题
+# 这也不是标题
+echo "hello"
+```
+
+```python
+# 注释一
+# 注释二
+print("hi")
+```
+
+## 代码块干扰测试
+
+与上一段刻意**同名**的标题，用来验证重名时锚点编号不会错位（第二个应为 `...-1`）。
+
+## 图片排版测试
+
+相对路径 + 图注（图片就放在文章旁边）：
+
+![宽图：相对路径](./wide.png "这是相对路径图片的图注")
+
+绝对路径 + 限宽 240px（小图不应被拉满宽）：
+
+![小图：绝对路径](/images/cover-start.svg?w=240)
+
+自然宽度 1200 的超宽图，未限宽 —— 应被缩到正文宽度而不是撑出容器：
+
+![超宽图：不限宽](/images/cover-start.svg)
+
+多图并排：
+
+<ImageRow cols={2}>
+  ![并排图一](./small.png)
+  ![并排图二](./wide.png)
+</ImageRow>
+
+故意写坏的图片，用来验证失败兜底：
+
+![坏图说明](./not-exist.png)
+
+## 内容块测试
+
+<Callout type="note" title="说明">
+这是 note 提示框，用来放补充说明。
+</Callout>
+
+<Callout type="tip" title="技巧">
+这是 tip 提示框：`<Callout type="tip">` 里可以写行内代码。
+</Callout>
+
+<Callout type="warning">
+不带 title 的 warning 提示框。
+</Callout>
+
+<Callout type="danger" title="注意">
+这是 danger 提示框。
+</Callout>
+
+<Details summary="展开看完整日志（折叠块测试）">
+
+折叠里可以放任意 MDX 内容，包括列表：
+
+- 第一项
+- 第二项
+
+以及加粗文本。
+
+</Details>
+
+<LinkCard
+  url="https://nextjs.org/docs/app"
+  title="Next.js App Router 文档"
+  description="链接卡片：整卡点击新窗口打开，不做 iframe 嵌入。"
+/>
+
+## 代码块测试
+
+短代码块（不应折叠，应有语言标签与复制按钮）：
+
+```bash
+npm run dev
+npm run build
+```
+
+超过 30 行的代码块（应默认折叠 + 展开全部按钮）：
+
+```python
+def line(i):
+    return f"第 {i} 行：用于验证长代码块的折叠行为"
+
+
+LINES = [line(i) for i in range(1, 41)]
+
+
+def main():
+    for i, text in enumerate(LINES, start=1):
+        print(f"{i:>3} | {text}")
+    return len(LINES)
+
+
+if __name__ == "__main__":
+    n = main()
+    print(f"共 {n} 行")
+    print("第 1 行占位")
+    print("第 2 行占位")
+    print("第 3 行占位")
+    print("第 4 行占位")
+    print("第 5 行占位")
+    print("第 6 行占位")
+    print("第 7 行占位")
+    print("第 8 行占位")
+    print("第 9 行占位")
+    print("第 10 行占位")
+    print("第 11 行占位")
+    print("第 12 行占位")
+    print("第 13 行占位")
+    print("第 14 行占位")
+    print("第 15 行占位")
+    print("第 16 行占位")
+    print("第 17 行占位")
+    print("第 18 行占位")
+    print("第 19 行占位")
+    print("第 20 行占位")
+    print("第 21 行占位")
+    print("第 22 行占位")
+    print("第 23 行占位")
+    print("第 24 行占位")
+    print("第 25 行占位")
+    print("第 26 行占位")
+    print("第 27 行占位")
+    print("第 28 行占位")
+    print("第 29 行占位")
+    print("第 30 行占位")
+    print("第 31 行占位")
+    print("第 32 行占位")
+    print("第 33 行占位")
+    print("第 34 行占位")
+    print("第 35 行占位")
+```

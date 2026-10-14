@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { ensureSchema } from "./db";
 
 export type CommentStatus = "pending" | "approved" | "spam";
@@ -11,6 +12,13 @@ export interface Comment {
   content: string;
   status: CommentStatus;
   createdAt: string;
+}
+
+/** 公开列表下发的结构：剔除 email（避免泄露评论者隐私），补上头像与作者标记 */
+export interface PublicComment extends Omit<Comment, "email"> {
+  /** 空字符串表示没有可用头像，前端回退到昵称首字色块 */
+  avatarUrl: string;
+  isAuthor: boolean;
 }
 
 interface Row {
@@ -46,6 +54,30 @@ export async function listComments(slug: string): Promise<Comment[]> {
     args: [slug],
   });
   return (res.rows as unknown as Row[]).map(toComment);
+}
+
+/** Gravatar 取邮箱小写后的 md5；d=404 让前端在取不到头像时回退到昵称首字 */
+function gravatarUrl(email: string): string {
+  const hash = createHash("md5").update(email.toLowerCase()).digest("hex");
+  return `https://www.gravatar.com/avatar/${hash}?d=404&s=80`;
+}
+
+/** 把库里的评论转成可公开下发的结构：邮箱只留在服务端 */
+export function toPublicComment(c: Comment): PublicComment {
+  const email = c.email.trim().toLowerCase();
+  // 未配置 AUTHOR_EMAIL 时不做作者识别，避免把个人邮箱写进代码
+  const authorEmail = process.env.AUTHOR_EMAIL?.trim().toLowerCase();
+  return {
+    id: c.id,
+    slug: c.slug,
+    parentId: c.parentId,
+    nickname: c.nickname,
+    content: c.content,
+    status: c.status,
+    createdAt: c.createdAt,
+    avatarUrl: email ? gravatarUrl(email) : "",
+    isAuthor: Boolean(authorEmail) && email === authorEmail,
+  };
 }
 
 /** 管理端列表：按状态过滤，未传状态则取全部 */

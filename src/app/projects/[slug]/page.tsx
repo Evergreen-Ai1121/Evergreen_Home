@@ -1,11 +1,16 @@
 import { notFound } from "next/navigation";
 import { ArrowUpRight } from "lucide-react";
-import { getAllSlugs, getDoc } from "@/lib/content";
+import { getAllSlugs, getDoc, getRelated, getSiblings } from "@/lib/content";
 import { Mdx } from "@/components/Mdx";
 import { TableOfContents } from "@/components/TableOfContents";
 import { PageHeader } from "@/components/PageHeader";
 import { SafeImage } from "@/components/SafeImage";
 import { GlassCard } from "@/components/GlassCard";
+import { ReadingProgress } from "@/components/ReadingProgress";
+import { DocMetaRow } from "@/components/DocMetaRow";
+import { ShareBar } from "@/components/ShareBar";
+import { PrevNext } from "@/components/PrevNext";
+import { RelatedList } from "@/components/RelatedList";
 
 export function generateStaticParams() {
   return getAllSlugs("projects").map((slug) => ({ slug }));
@@ -22,12 +27,16 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
   const { slug } = await params;
   const doc = getDoc("projects", slug);
   if (!doc) notFound();
+  const { prev, next } = getSiblings("projects", slug);
+  const related = getRelated(doc);
 
   return (
     <div className="wide:mx-auto wide:max-w-wide">
+      <ReadingProgress />
       <div className="wide:grid wide:grid-cols-[720px_240px] wide:justify-center wide:gap-10">
         <article className="mx-auto min-w-0 max-w-reading wide:mx-0">
           <PageHeader title={doc.title} description={doc.summary} />
+          <DocMetaRow doc={doc} />
 
           {doc.cover && (
             <div className="mb-8 overflow-hidden rounded-card border border-border">
@@ -69,7 +78,12 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
           )}
 
           <TableOfContents items={doc.toc} variant="floating" />
-          <Mdx source={doc.content} />
+          <Mdx source={doc.content} base={`projects/${doc.slug}`} />
+
+          <ShareBar title={doc.title} />
+
+          <PrevNext prev={prev} next={next} />
+          <RelatedList items={related} />
         </article>
         <TableOfContents items={doc.toc} variant="sidebar" />
       </div>

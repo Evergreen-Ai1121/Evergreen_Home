@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
-import { deleteMoment, updateMoment } from "@/lib/moments";
+import { deleteMoment, updateMoment, validateImages, type MomentImage } from "@/lib/moments";
 import { isAuthed } from "@/lib/auth";
-import { MAX_IMAGES } from "@/lib/cos";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -20,12 +19,13 @@ export async function PATCH(req: Request, { params }: Ctx) {
   const content = typeof body.content === "string" ? body.content.trim() : "";
   if (!content) return NextResponse.json({ error: "内容不能为空" }, { status: 400 });
   const images = Array.isArray(body.images) ? body.images : [];
-  if (images.length > MAX_IMAGES) {
-    return NextResponse.json({ error: `图片最多 ${MAX_IMAGES} 张` }, { status: 400 });
+  const imageError = validateImages(images);
+  if (imageError) {
+    return NextResponse.json({ error: imageError }, { status: 400 });
   }
 
   try {
-    await updateMoment(id, content, images as never);
+    await updateMoment(id, content, images as MomentImage[]);
     revalidatePath("/moments");
     revalidatePath("/");
     return NextResponse.json({ ok: true });

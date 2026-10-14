@@ -6,6 +6,8 @@ build/
 .env.local
 .env*.local
 public/search-index.json
+public/content-images/
+public/image-sizes.json
 *.tsbuildinfo
 next-env.d.ts
 .DS_Store

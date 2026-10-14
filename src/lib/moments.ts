@@ -1,5 +1,7 @@
 import type { Client } from "@libsql/client";
 import { ensureSchema } from "./db";
+import { MAX_IMAGES } from "./cos";
+import { isHttpUrl } from "./utils";
 
 export interface MomentImage {
   key: string;
@@ -83,6 +85,14 @@ export async function deleteMoment(id: number) {
   const db = await readyDb();
   if (!db) throw new Error("数据库未配置：请设置 TURSO_DATABASE_URL");
   await db.execute({ sql: "delete from moments where id = ?", args: [id] });
+}
+
+/** 配图只接受 http(s) 链接且不超过上限；返回错误文案，合法时返回 null */
+export function validateImages(raw: unknown): string | null {
+  const list = Array.isArray(raw) ? (raw as { url?: unknown }[]) : [];
+  if (list.length > MAX_IMAGES) return `图片最多 ${MAX_IMAGES} 张`;
+  const bad = list.some((i) => typeof i?.url !== "string" || !isHttpUrl(i.url));
+  return bad ? "图片链接必须是 http/https 地址" : null;
 }
 
 /** 为说说图片生成缩略图地址（数据万象）；未开启时回退原图 */

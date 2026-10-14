@@ -1,41 +1,90 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ListTree, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { TocItem } from "@/lib/content";
 
-/** 滚动跟随：进入视口顶部区段的标题即为当前章节 */
-function useActiveId(items: TocItem[]): string {
+/**
+ * 标题越过这条线就算进入"当前章节"。必须略大于 html 的 scroll-padding-top（88px），
+ * 否则点击目录跳过去后，标题停在 88px 仍在线下方，解锁时高亮会退回上一节。
+ *
+ * 注意：不要给 .prose h2/h3 再加 scroll-margin-top —— 它会和 scroll-padding-top 相加，
+ * 让标题落位掉到 184px。
+ */
+const TOP_LINE = 96;
+/** 点击目录后，滚动停止多久解除高亮锁定 */
+const UNLOCK_IDLE_MS = 120;
+
+/**
+ * 滚动跟随：实时测量每个标题的位置，取最后一个越过顶线的。
+ *
+ * 不用 IntersectionObserver —— 它只在跨越阈值时回调，拿到的 top 是过期快照，
+ * 会出现高亮卡死、文末小节高亮不到、快速滚动错乱。
+ */
+function useActiveId(items: TocItem[]) {
   const [activeId, setActiveId] = useState<string>(items[0]?.id ?? "");
+  const locked = useRef(false);
+  const unlockTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    if (items.length === 0) return;
-    const heads = items
-      .map((i) => document.getElementById(i.id))
-      .filter((el): el is HTMLElement => Boolean(el));
-    if (heads.length === 0) return;
+  const measure = useCallback(() => {
+    if (items.length === 0 || locked.current) return;
 
-    const visible = new Map<string, number>();
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (e.isIntersecting) visible.set(e.target.id, e.boundingClientRect.top);
-          else visible.delete(e.target.id);
-        }
-        let best: { id: string; top: number } | null = null;
-        for (const [id, top] of visible) {
-          if (!best || top < best.top) best = { id, top };
-        }
-        if (best) setActiveId(best.id);
-      },
-      { rootMargin: "-96px 0px -66% 0px", threshold: 0 },
-    );
-    heads.forEach((h) => observer.observe(h));
-    return () => observer.disconnect();
+    // 滚到底部时，最后几个小节永远越不过顶线，直接判给最后一个
+    const doc = document.documentElement;
+    if (window.scrollY + window.innerHeight >= doc.scrollHeight - 2) {
+      setActiveId(items[items.length - 1]!.id);
+      return;
+    }
+
+    let current = items[0]!.id;
+    for (const item of items) {
+      const el = document.getElementById(item.id);
+      if (!el) continue;
+      if (el.getBoundingClientRect().top > TOP_LINE) break;
+      current = item.id;
+    }
+    setActiveId(current);
   }, [items]);
 
-  return activeId;
+  useEffect(() => {
+    let raf = 0;
+    const onScroll = () => {
+      if (locked.current) {
+        // 平滑滚动期间不跟随，滚动停下后再恢复
+        if (unlockTimer.current) clearTimeout(unlockTimer.current);
+        unlockTimer.current = setTimeout(() => {
+          locked.current = false;
+          measure();
+        }, UNLOCK_IDLE_MS);
+        return;
+      }
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        measure();
+      });
+    };
+
+    measure();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      if (raf) cancelAnimationFrame(raf);
+      if (unlockTimer.current) clearTimeout(unlockTimer.current);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [measure]);
+
+  /** 点击目录项：立刻高亮并在滚动期间锁定，避免高亮一路扫过中间章节 */
+  const jump = useCallback((id: string) => {
+    locked.current = true;
+    setActiveId(id);
+    history.replaceState(null, "", `#${id}`);
+  }, []);
+
+  return { activeId, jump };
 }
 
 export function TableOfContents({
@@ -45,18 +94,25 @@ export function TableOfContents({
   items: TocItem[];
   variant?: "sidebar" | "floating";
 }) {
-  const activeId = useActiveId(items);
+  const { activeId, jump } = useActiveId(items);
   const scrollRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef(new Map<string, HTMLAnchorElement>());
   const [open, setOpen] = useState(false);
 
-  // 当前章节始终滚进可见区域（居中偏上），目录再长也不会跟丢
+  // 当前章节滚出目录可视区时才滚动，且平滑过渡
   useEffect(() => {
     const box = scrollRef.current;
     const el = itemRefs.current.get(activeId);
     if (!box || !el || box.clientHeight === 0) return;
-    const target = el.offsetTop - (box.clientHeight - el.offsetHeight) / 2;
-    box.scrollTo({ top: Math.max(0, target), behavior: "smooth" });
+    const top = el.offsetTop;
+    const bottom = top + el.offsetHeight;
+    const outOfView = top < box.scrollTop || bottom > box.scrollTop + box.clientHeight;
+    if (!outOfView) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    box.scrollTo({
+      top: Math.max(0, top - (box.clientHeight - el.offsetHeight) / 2),
+      behavior: reduced ? "auto" : "smooth",
+    });
   }, [activeId, open]);
 
   if (items.length === 0) return null;
@@ -80,6 +136,10 @@ export function TableOfContents({
                 else itemRefs.current.delete(item.id);
               }}
               href={`#${item.id}`}
+              onClick={() => {
+                jump(item.id);
+                if (variant === "floating") setOpen(false);
+              }}
               title={item.text}
               aria-current={active ? "location" : undefined}
               className={cn(
@@ -108,7 +168,7 @@ export function TableOfContents({
         <p className="mb-3 pl-3 text-xs uppercase tracking-wide text-text-muted">目录</p>
         <div
           ref={scrollRef}
-          className="no-scrollbar max-h-[calc(100dvh-12rem)] overflow-y-auto pr-1"
+          className="no-scrollbar relative max-h-[calc(100dvh-12rem)] overflow-y-auto pr-1"
         >
           {list}
         </div>

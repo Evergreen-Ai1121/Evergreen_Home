@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { getAllSlugs } from "@/lib/content";
+import { getAllSlugs, getAllTags } from "@/lib/content";
 import { site } from "@/lib/site";
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -12,6 +12,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/moments`, lastModified: now, changeFrequency: "daily", priority: 0.6 },
     { url: `${base}/projects`, lastModified: now, changeFrequency: "monthly", priority: 0.9 },
     { url: `${base}/about`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${base}/tags`, lastModified: now, changeFrequency: "weekly", priority: 0.5 },
+    { url: `${base}/archive`, lastModified: now, changeFrequency: "weekly", priority: 0.5 },
+    ...getAllTags().map((t) => ({
+      url: `${base}/tags/${encodeURIComponent(t.name)}`,
+      lastModified: now,
+      changeFrequency: "monthly" as const,
+      priority: 0.4,
+    })),
     ...getAllSlugs("notes").map((slug) => ({
       url: `${base}/notes/${encodeURIComponent(slug)}`,
       lastModified: now,

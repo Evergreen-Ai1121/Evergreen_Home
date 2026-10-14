@@ -3,21 +3,27 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Archive,
+  Github,
   Home,
   BookOpen,
   FileText,
+  Mail,
   MessageCircle,
   Layers,
+  Tag,
   User,
-  Github,
-  Mail,
 } from "lucide-react";
 import { site } from "@/lib/site";
+import { useLang } from "./LangProvider";
+import { LangToggle } from "./LangToggle";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./ThemeToggle";
 import { SearchTrigger } from "./SearchTrigger";
 
 const ICONS = { home: Home, notes: BookOpen, posts: FileText, moments: MessageCircle, projects: Layers, about: User } as const;
+const MORE_ICONS = { tags: Tag, archive: Archive } as const;
+const NAV_ICONS = { ...ICONS, ...MORE_ICONS } as const;
 
 function isActive(pathname: string, href: string) {
   if (href === "/") return pathname === "/";
@@ -40,9 +46,16 @@ function Logo() {
 
 const SOCIAL_ICONS = { github: Github, mail: Mail } as const;
 
+/** 导航项 key 直接对应字典里的 nav.* */
+function useNavLabel() {
+  const { t } = useLang();
+  return (key: string) => t((`nav.${key}`) as Parameters<typeof t>[0]);
+}
+
 /* ── 桌面端：240px 固定侧栏 ─────────────────────────────── */
 export function SideNav() {
   const pathname = usePathname();
+  const tNav = useNavLabel();
   return (
     <aside className="fixed left-0 top-0 z-40 hidden h-dvh w-60 flex-col justify-between border-r border-border bg-surface px-5 py-6 backdrop-blur desktop:flex">
       <div>
@@ -67,7 +80,32 @@ export function SideNav() {
                     )}
                   >
                     <Icon className="h-[18px] w-[18px]" strokeWidth={1.5} />
-                    {item.label}
+                    {tNav(item.key)}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+        <nav aria-label="分类导航" className="mt-6 border-t border-border pt-4">
+          <ul className="space-y-1">
+            {site.moreNav.map((item) => {
+              const Icon = MORE_ICONS[item.key as keyof typeof MORE_ICONS];
+              const active = isActive(pathname, item.href);
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    aria-current={active ? "page" : undefined}
+                    className={cn(
+                      "flex items-center gap-3 rounded-control px-3 py-2 text-[15px] transition-colors duration-150",
+                      active
+                        ? "bg-accent-soft text-accent"
+                        : "text-text-muted [@media(hover:hover)]:hover:bg-surface-strong [@media(hover:hover)]:hover:text-text",
+                    )}
+                  >
+                    <Icon className="h-[18px] w-[18px]" strokeWidth={1.5} />
+                    {tNav(item.key)}
                   </Link>
                 </li>
               );
@@ -79,6 +117,7 @@ export function SideNav() {
       <div className="space-y-4">
         <div className="flex items-center gap-2">
           <SearchTrigger withHint className="flex-1" />
+          <LangToggle />
           <ThemeToggle />
         </div>
         <div className="flex gap-2 px-1">
@@ -106,6 +145,7 @@ export function SideNav() {
 /* ── 移动端 & 平板：顶部栏（平板显示横向导航，移动仅 Logo + 操作） ── */
 export function TopBar() {
   const pathname = usePathname();
+  const tNav = useNavLabel();
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-surface backdrop-blur desktop:hidden">
       <div className="flex h-16 items-center gap-4 px-4 tablet:px-6">
@@ -115,7 +155,7 @@ export function TopBar() {
           className="hidden min-w-0 flex-1 overflow-x-auto tablet:block"
         >
           <ul className="flex items-center gap-1">
-            {site.nav.slice(1).map((item) => {
+            {[...site.nav.slice(1), ...site.moreNav].map((item) => {
               const active = isActive(pathname, item.href);
               return (
                 <li key={item.href}>
@@ -129,7 +169,7 @@ export function TopBar() {
                         : "text-text-muted [@media(hover:hover)]:hover:bg-surface-strong [@media(hover:hover)]:hover:text-text",
                     )}
                   >
-                    {item.label}
+                    {tNav(item.key)}
                   </Link>
                 </li>
               );
@@ -138,6 +178,7 @@ export function TopBar() {
         </nav>
         <div className="ml-auto flex items-center gap-2">
           <SearchTrigger />
+          <LangToggle />
           <ThemeToggle />
         </div>
       </div>
@@ -148,6 +189,7 @@ export function TopBar() {
 /* ── 移动端：底部标签栏 ─────────────────────────────────── */
 export function BottomTabBar() {
   const pathname = usePathname();
+  const tNav = useNavLabel();
   return (
     <nav
       aria-label="主导航"
@@ -168,7 +210,7 @@ export function BottomTabBar() {
                 )}
               >
                 <Icon className="h-5 w-5" strokeWidth={1.5} />
-                {item.label}
+                {tNav(item.key)}
               </Link>
             </li>
           );

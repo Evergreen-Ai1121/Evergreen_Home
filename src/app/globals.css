@@ -9,9 +9,12 @@
   --c-surface-strong: rgba(255, 255, 255, 0.85);
   --c-border: rgba(15, 23, 42, 0.08);
   --c-text: #1b1f27;
-  --c-text-muted: #5c6675;
-  --c-accent: #5b8def;
-  --c-accent-soft: rgba(91, 141, 239, 0.18);
+  /* 次级文本要能在背景光斑（实测最亮处到 #cacffe）上也过 AA，所以比“看着舒服”再深一档 */
+  --c-text-muted: #4d5666;
+  /* 蓝色要比"好看"更深一档：#5b8def 在浅底上只有 3.0:1，正文链接与白字按钮都过不了 AA；
+     取 #2c50a8 是为了连背景光斑压过、还叠了 accent-soft 底的地方（目录高亮项实测 #c9caf2）也还能到 4.5:1 */
+  --c-accent: #2c50a8;
+  --c-accent-soft: rgba(44, 80, 168, 0.14);
   --c-glow-a: rgba(168, 200, 255, 0.55);
   --c-glow-b: rgba(201, 188, 255, 0.45);
   --c-glow-c: rgba(182, 231, 255, 0.45);
@@ -140,10 +143,11 @@
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
   /* 目录面板：fixed 定位时对齐到正文右侧的 240px 目录轨道。
-     推导：内容区起点 112px（64 侧栏 + 48 内边距），正文 720 + 间距 40 + 目录 240 = 1000，
-     目录右边缘 = 112 + (可用宽 - 1000)/2 + 1000，换算成距视口右边 = 100vw - 1112 - (100vw - 1160)/2 */
+     当前布局：240 侧栏 + 32*2 内边距，正文 720 + 间距 40 + 目录 240 = 1000，
+     目录右边缘距视口右边 = 100vw - 1272 - (100vw - 1304)/2（推导见 git 历史）。
+     ⚠️ 若改正文栏宽/间距/侧栏宽度，此公式需同步更新 */
   .toc-rail {
-    right: calc(100vw - 1112px - (100vw - 1160px) / 2);
+    right: calc(100vw - 1272px - (100vw - 1304px) / 2);
   }
   /* 目录等面板：可滚动但不显示滚动条 */
   .no-scrollbar {
@@ -171,9 +175,52 @@
   --tw-prose-td-borders: var(--c-border);
 }
 
-/* 锚点跳转时给标题留出顶部空间（移动端顶栏 / 桌面留白） */
-.prose :is(h2, h3) {
-  scroll-margin-top: 96px;
+/* ── 正文图片 ────────────────────────────────────────── */
+/* 图片按自然尺寸显示（不强制铺满），窄图不会被拉爆；间距由包裹层给，
+   图片自身的排版外边距清零，避免与 prose 默认边距叠加 */
+.prose .mdx-img img {
+  margin: 0;
+}
+
+.mdx-img {
+  position: relative;
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.mdx-img-skeleton {
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  border: 1px solid var(--c-border);
+  background: var(--c-surface);
+}
+
+.mdx-img-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1.25rem;
+  border-radius: 12px;
+  border: 1px solid var(--c-border);
+  background: var(--c-surface);
+  font-size: 0.8125rem;
+  color: var(--c-text-muted);
+  text-align: center;
+}
+
+/* 图注：![alt](src "图注") */
+.mdx-figure {
+  margin: 0;
+}
+
+.mdx-caption {
+  margin-top: 0.5rem;
+  text-align: center;
+  font-size: 13px;
+  color: var(--c-text-muted);
 }
 
 .prose pre {
@@ -183,6 +230,14 @@
 }
 .dark .prose pre {
   background: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* 正文里的链接不能只靠颜色区分（WCAG 1.4.1）：正文段落与列表里的链接加下划线。
+   标题锚点（rehype-autolink-headings 会加 no-underline）与卡片不受影响 */
+.prose :is(p, li) > a {
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--c-accent) 40%, transparent);
+  text-underline-offset: 2px;
 }
 
 .prose code::before,
@@ -227,6 +282,25 @@
   background: var(--c-accent-soft);
   border-radius: 4px;
   padding: 0.1em 0.2em;
+}
+
+/* 行号：code 用 grid 布局，每行是 [data-line]，counter 编号（窄屏不显示，留给代码本身宽度）。
+   ::before 是 CSS 生成内容，不会被“复制代码”取走 */
+@media (min-width: 768px) {
+  .code-lines code {
+    counter-reset: line;
+  }
+  .code-lines [data-line]::before {
+    counter-increment: line;
+    content: counter(line);
+    display: inline-block;
+    width: 1.25rem;
+    margin-right: 0.75rem;
+    text-align: right;
+    color: var(--c-text-muted);
+    opacity: 0.5;
+    user-select: none;
+  }
 }
 
 /* KaTeX 溢出保护 */

@@ -1,6 +1,7 @@
 import { thumbUrl, type Moment } from "@/lib/moments";
 import { GlassCard } from "./GlassCard";
 import { ImageWall } from "./ImageWall";
+import { MomentContent } from "./MomentContent";
 
 function formatMomentTime(iso: string) {
   if (!iso) return "";
@@ -12,8 +13,8 @@ function formatMomentTime(iso: string) {
 export function MomentItem({ moment }: { moment: Moment }) {
   return (
     <GlassCard id={`moment-${moment.id}`} className="scroll-mt-24 p-5">
-      <div className="whitespace-pre-wrap text-[15px] leading-relaxed">
-        {moment.content}
+      <div className="text-[15px] leading-relaxed">
+        <MomentContent content={moment.content} />
       </div>
       {moment.images.length > 0 && (
         <ImageWall

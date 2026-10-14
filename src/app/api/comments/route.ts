@@ -1,17 +1,31 @@
 import { NextResponse } from "next/server";
+import { getCollection } from "@/lib/content";
 import { isAuthed } from "@/lib/auth";
-import { createComment, listAllComments, listComments, type CommentStatus } from "@/lib/comments";
+import {
+  createComment,
+  listAllComments,
+  listComments,
+  toPublicComment,
+  type CommentStatus,
+} from "@/lib/comments";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 
 const MAX_CONTENT = 1000;
 const MAX_NICKNAME = 24;
+
+/** 管理端要显示评论所属文章标题，slug → 标题的映射在服务端算好下发 */
+function postTitles(): Record<string, string> {
+  const titles: Record<string, string> = {};
+  for (const doc of getCollection("posts")) titles[doc.slug] = doc.title;
+  return titles;
+}
 
 export async function GET(req: Request) {
   const sp = new URL(req.url).searchParams;
   const slug = sp.get("slug") ?? "";
   const status = sp.get("status");
 
-  // 管理端：按状态拉取待审核列表
+  // 管理端：按状态拉取待审核列表（含邮箱，仅登录可见）
   if (status) {
     if (!(await isAuthed())) return NextResponse.json({ error: "未授权" }, { status: 401 });
     if (status !== "all" && !["pending", "approved", "spam"].includes(status)) {
@@ -19,15 +33,18 @@ export async function GET(req: Request) {
     }
     try {
       const filter = status === "all" ? undefined : (status as CommentStatus);
-      return NextResponse.json({ items: await listAllComments(filter) });
+      return NextResponse.json({
+        items: await listAllComments(filter),
+        titles: postTitles(),
+      });
     } catch {
-      return NextResponse.json({ items: [], degraded: true });
+      return NextResponse.json({ items: [], titles: {}, degraded: true });
     }
   }
 
   if (!slug) return NextResponse.json({ error: "缺少 slug" }, { status: 400 });
   try {
-    return NextResponse.json({ items: await listComments(slug) });
+    return NextResponse.json({ items: (await listComments(slug)).map(toPublicComment) });
   } catch {
     return NextResponse.json({ items: [], degraded: true });
   }

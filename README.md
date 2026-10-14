@@ -55,6 +55,36 @@ draft: false                 # true 时生产构建会剔除
 
 写完 `git push`，部署平台自动重新构建。
 
+### 图片怎么放
+
+两种写法都可以，构建期都会自动探测宽高并写进 `width`/`height`（不会有 CLS 抖动）：
+
+```mdx
+![绝对路径](/images/cover.svg)          <!-- 图片放 public/images/ -->
+![相对路径](./cover.png)                <!-- 图片放文章旁边的同名目录：content/posts/<slug>/ -->
+![限宽 240](./cover.png?w=240)          <!-- 查询参数控显示宽度，align=left|right 也支持 -->
+![带图注](./cover.png "这是图注")        <!-- 渲染成 figure + figcaption -->
+
+<ImageRow cols={2}>                     <!-- 多图并排，窄屏自动单列 -->
+  ![图一](./a.png)
+  ![图二](./b.png)
+</ImageRow>
+```
+
+新加图片后跑一次 `npm run content-images`（`predev` / `prebuild` 也会自动跑），否则尺寸清单里没有它。
+
+### 正文里能用的组件
+
+MDX 里无需 import，直接写：
+
+| 组件 | 作用 |
+|---|---|
+| `<Callout type="note\|tip\|warning\|danger" title="…">` | 提示框 |
+| `<Details summary="展开看…">` | 折叠块（可放任意 MDX） |
+| `<LinkCard url="https://…" title="…" description="…" />` | 链接卡片（不嵌 iframe） |
+
+代码块自动带语言标签、复制按钮、桌面行号，超过 30 行默认折叠。
+
 ## 发说说
 
 1. 在 `.env.local` 设置 `ADMIN_TOKEN`

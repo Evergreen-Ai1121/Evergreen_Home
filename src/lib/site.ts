@@ -14,6 +14,11 @@ export const site = {
     { href: "/projects", label: "作品", key: "projects" },
     { href: "/about", label: "关于", key: "about" },
   ],
+  /** 次要导航：只出现在桌面侧栏与平板顶栏，移动端底部标签栏保持六个主入口 */
+  moreNav: [
+    { href: "/tags", label: "标签", key: "tags" },
+    { href: "/archive", label: "归档", key: "archive" },
+  ],
   social: [
     { label: "GitHub", href: "https://github.com/", key: "github" },
     { label: "邮箱", href: "mailto:aievergreen@qq.com", key: "mail" },

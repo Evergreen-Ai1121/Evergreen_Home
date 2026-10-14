@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
-import { createMoment, listMoments } from "@/lib/moments";
+import { createMoment, listMoments, validateImages, type MomentImage } from "@/lib/moments";
 import { isAuthed } from "@/lib/auth";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
-import { MAX_IMAGES } from "@/lib/cos";
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
@@ -40,12 +39,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "内容过长（上限 2000 字）" }, { status: 400 });
   }
   const images = Array.isArray(body.images) ? body.images : [];
-  if (images.length > MAX_IMAGES) {
-    return NextResponse.json({ error: `图片最多 ${MAX_IMAGES} 张` }, { status: 400 });
+  const imageError = validateImages(images);
+  if (imageError) {
+    return NextResponse.json({ error: imageError }, { status: 400 });
   }
 
   try {
-    const id = await createMoment(content, images as never);
+    const id = await createMoment(content, images as MomentImage[]);
     revalidatePath("/moments");
     revalidatePath("/");
     return NextResponse.json({ id }, { status: 201 });

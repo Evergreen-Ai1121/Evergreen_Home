@@ -4,9 +4,11 @@ import "katex/dist/katex.min.css";
 import { site } from "@/lib/site";
 import { GlowBackground } from "@/components/GlowBackground";
 import { SearchProvider } from "@/components/SearchProvider";
+import { LangProvider } from "@/components/LangProvider";
 import { BottomTabBar, SideNav, TopBar } from "@/components/Nav";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { themeInitScript } from "@/components/ThemeToggle";
+import { T } from "@/components/LangProvider";
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
@@ -50,21 +52,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </a>
         <GlowBackground />
         <SearchProvider>
-          <SideNav />
-          <div className="desktop:pl-60">
-            <TopBar />
-            <main
-              id="main"
-              className="px-4 pb-24 pt-6 tablet:px-6 tablet:pb-12 desktop:px-8 desktop:pt-10"
-            >
-              {children}
-            </main>
-            <footer className="hidden px-8 pb-10 text-xs text-text-muted desktop:block">
-              © {new Date().getFullYear()} {site.author} · 用 Next.js 构建
-            </footer>
-          </div>
-          <BottomTabBar />
-          <ScrollToTop />
+          <LangProvider>
+            <SideNav />
+            <div className="desktop:pl-60">
+              <TopBar />
+              <main
+                id="main"
+                className="px-4 pb-24 pt-6 tablet:px-6 tablet:pb-12 desktop:px-8 desktop:pt-10"
+              >
+                {children}
+              </main>
+              <footer className="hidden px-8 pb-10 text-xs text-text-muted desktop:block">
+                © {new Date().getFullYear()} {site.author} · <T k="footer.builtWith" />
+              </footer>
+            </div>
+            <BottomTabBar />
+            <ScrollToTop />
+          </LangProvider>
         </SearchProvider>
       </body>
     </html>

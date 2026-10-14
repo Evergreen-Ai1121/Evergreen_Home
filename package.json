@@ -3,14 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "predev": "node scripts/build-search-index.mjs",
+    "predev": "node scripts/build-search-index.mjs && node scripts/sync-content-images.mjs",
     "dev": "next dev",
-    "prebuild": "node scripts/build-search-index.mjs",
+    "prebuild": "node scripts/build-search-index.mjs && node scripts/sync-content-images.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "search-index": "node scripts/build-search-index.mjs",
+    "content-images": "node scripts/sync-content-images.mjs",
     "db:init": "node scripts/init-db.mjs"
   },
   "dependencies": {
@@ -21,6 +22,7 @@
     "fuse.js": "^7.0.0",
     "github-slugger": "^2.0.0",
     "gray-matter": "^4.0.3",
+    "image-size": "^2.0.4",
     "katex": "^0.16.11",
     "lucide-react": "^0.469.0",
     "next": "^15.5.27",

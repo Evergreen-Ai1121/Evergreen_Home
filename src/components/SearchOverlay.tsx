@@ -4,6 +4,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { CornerDownLeft, Loader2, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLang } from "./LangProvider";
+import type { DictKey } from "@/lib/i18n";
+import { trapTab } from "@/lib/focus";
 
 export interface SearchDoc {
   type: "notes" | "posts" | "projects" | "moments";
@@ -12,25 +15,98 @@ export interface SearchDoc {
   tags: string[];
   url: string;
   date?: string;
+  /** 正文全文（构建期 stripMarkdown，截断 3000 字），搜正文用；说说没有 */
+  body?: string;
 }
 
-const GROUP_LABEL: Record<SearchDoc["type"], string> = {
-  posts: "文章",
-  notes: "笔记",
-  moments: "说说",
-  projects: "作品",
+/** 一条命中结果：原文 + 可选的高亮片段 */
+interface Result {
+  doc: SearchDoc;
+  snippet: React.ReactNode | null;
+}
+
+type Range = readonly [number, number];
+interface FuseMatch {
+  key?: string;
+  indices: Range[];
+}
+
+/** 片段窗口：命中位置前后各留这么多字符 */
+const WINDOW = 60;
+
+const GROUP_LABEL: Record<SearchDoc["type"], DictKey> = {
+  posts: "nav.posts",
+  notes: "nav.notes",
+  moments: "nav.moments",
+  projects: "nav.projects",
 };
 
 const GROUP_ORDER: SearchDoc["type"][] = ["posts", "notes", "moments", "projects"];
 
 type Status = "idle" | "loading" | "ready" | "error";
 
+/* ── 命中片段：把 Fuse 给的区间合并后提取窗口并高亮 ───────── */
+
+/** 相邻的命中（间隔 ≤2 字符）合成一段，避免出来一堆零碎的 <mark> */
+function mergeRanges(indices: Range[]): [number, number][] {
+  const sorted = [...indices].sort((a, b) => a[0] - b[0]);
+  const out: [number, number][] = [];
+  for (const [s, e] of sorted) {
+    const last = out[out.length - 1];
+    if (last && s - last[1] <= 2) last[1] = Math.max(last[1], e);
+    else out.push([s, e]);
+  }
+  return out;
+}
+
+function withMarks(text: string, ranges: [number, number][]) {
+  const nodes: React.ReactNode[] = [];
+  let pos = 0;
+  for (const [s, e] of ranges) {
+    const start = Math.max(pos, s);
+    const end = Math.min(text.length, e + 1);
+    if (start > pos) nodes.push(text.slice(pos, start));
+    nodes.push(
+      <mark key={`${start}-${end}`} className="rounded bg-accent-soft px-0.5 text-accent">
+        {text.slice(start, end)}
+      </mark>,
+    );
+    pos = end;
+  }
+  if (pos < text.length) nodes.push(text.slice(pos));
+  return nodes;
+}
+
+/** 优先从正文取片段（Fuse 的 body 匹配），没有就退回摘要，再没有就不显示 */
+function makeSnippet(doc: SearchDoc, matches: FuseMatch[]): React.ReactNode | null {
+  const bodyHit = matches.find((m) => m.key === "body" && m.indices.length > 0);
+  if (bodyHit && doc.body) {
+    const ranges = mergeRanges(bodyHit.indices);
+    const first = ranges[0][0];
+    const start = Math.max(0, first - WINDOW);
+    const end = Math.min(doc.body.length, start + WINDOW * 3);
+    const local = ranges
+      .filter(([s, e]) => e >= start && s < end)
+      .map(([s, e]) => [Math.max(0, s - start), Math.min(end, e - start)] as [number, number]);
+    return (
+      <>
+        {start > 0 && "…"}
+        {withMarks(doc.body.slice(start, end), local)}
+        {end < doc.body.length && "…"}
+      </>
+    );
+  }
+  return null;
+}
+
 export function SearchOverlay({ onClose }: { onClose: () => void }) {
   const [query, setQuery] = useState("");
   const [docs, setDocs] = useState<SearchDoc[]>([]);
   const [status, setStatus] = useState<Status>("idle");
+  const { t } = useLang();
   const [active, setActive] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const fuseRef = useRef<any>(null);
 
@@ -67,16 +143,19 @@ export function SearchOverlay({ onClose }: { onClose: () => void }) {
         }
         if (cancelled) return;
         setDocs(items);
-        fuseRef.current = new Fuse(items, {
-          keys: [
-            { name: "title", weight: 0.5 },
-            { name: "summary", weight: 0.3 },
-            { name: "tags", weight: 0.2 },
-          ],
-          threshold: 0.4,
-          ignoreLocation: true,
-          minMatchCharLength: 1,
-        });
+    // 权重：标题最高，其次标签与摘要，正文最低（但能命中标题里没有的词）
+    fuseRef.current = new Fuse(items, {
+      keys: [
+        { name: "title", weight: 0.4 },
+        { name: "tags", weight: 0.2 },
+        { name: "summary", weight: 0.2 },
+        { name: "body", weight: 0.2 },
+      ],
+      includeMatches: true,
+      threshold: 0.35,
+      ignoreLocation: true,
+      minMatchCharLength: 1,
+    });
         setStatus("ready");
       } catch {
         if (!cancelled) setStatus("error");
@@ -94,21 +173,24 @@ export function SearchOverlay({ onClose }: { onClose: () => void }) {
     return () => clearTimeout(t);
   }, [query]);
 
-  const results = useMemo<SearchDoc[]>(() => {
+  const results = useMemo<Result[]>(() => {
     if (!debounced) return [];
-    if (!fuseRef.current) return docs.slice(0, 20);
+    if (!fuseRef.current) return docs.slice(0, 20).map((doc) => ({ doc, snippet: null }));
     return fuseRef.current
       .search(debounced, { limit: 30 })
-      .map((r: { item: SearchDoc }) => r.item);
+      .map((r: { item: SearchDoc; matches?: FuseMatch[] }) => ({
+        doc: r.item,
+        snippet: makeSnippet(r.item, r.matches ?? []),
+      }));
   }, [debounced, docs]);
 
   const grouped = useMemo<
-    { type: SearchDoc["type"]; label: string; items: SearchDoc[] }[]
+    { type: SearchDoc["type"]; label: string; items: Result[] }[]
   >(() => {
     return GROUP_ORDER.map((type) => ({
       type,
-      label: GROUP_LABEL[type],
-      items: results.filter((r) => r.type === type),
+      label: t(GROUP_LABEL[type]),
+      items: results.filter((r) => r.doc.type === type),
     })).filter((g) => g.items.length > 0);
   }, [results]);
 
@@ -123,6 +205,7 @@ export function SearchOverlay({ onClose }: { onClose: () => void }) {
     document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
+      if (e.key === "Tab") trapTab(e, dialogRef.current);
     };
     window.addEventListener("keydown", onKey);
     return () => {
@@ -142,7 +225,7 @@ export function SearchOverlay({ onClose }: { onClose: () => void }) {
     } else if (e.key === "Enter") {
       e.preventDefault();
       const target = flat[active];
-      if (target) window.location.href = target.url;
+      if (target) window.location.href = target.doc.url;
     }
   };
 
@@ -156,6 +239,7 @@ export function SearchOverlay({ onClose }: { onClose: () => void }) {
 
   return (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-label="站内搜索"
@@ -176,7 +260,7 @@ export function SearchOverlay({ onClose }: { onClose: () => void }) {
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="搜索文章、笔记、说说、作品…"
+            placeholder={t("search.placeholder")}
             className="w-full bg-transparent text-base outline-none placeholder:text-text-muted"
             aria-label="搜索关键词"
           />
@@ -186,7 +270,7 @@ export function SearchOverlay({ onClose }: { onClose: () => void }) {
           <button
             type="button"
             onClick={onClose}
-            aria-label="关闭搜索"
+            aria-label={t("action.close")}
             className="rounded-control p-1 text-text-muted hover:text-text"
           >
             <X className="h-5 w-5" strokeWidth={1.5} />
@@ -196,13 +280,13 @@ export function SearchOverlay({ onClose }: { onClose: () => void }) {
         <div ref={listRef} className="max-h-[60vh] overflow-y-auto p-2">
           {status === "error" && (
             <p className="p-4 text-sm text-text-muted">
-              搜索索引不可用，请稍后再试。
+{t("search.error")}
             </p>
           )}
 
           {status !== "error" && debounced && flat.length === 0 && (
             <div className="p-4">
-              <p className="text-sm text-text-muted">没有找到相关内容，看看最近更新的？</p>
+              <p className="text-sm text-text-muted">{t("search.empty")}</p>
               <ul className="mt-3 space-y-1">
                 {recent.map((d) => (
                   <li key={d.url}>
@@ -221,7 +305,7 @@ export function SearchOverlay({ onClose }: { onClose: () => void }) {
 
           {!debounced && status === "ready" && (
             <p className="p-4 text-sm text-text-muted">
-              输入关键词开始检索，↑ ↓ 选择，Enter 打开，Esc 关闭。
+{t("search.help")}
             </p>
           )}
 
@@ -231,8 +315,9 @@ export function SearchOverlay({ onClose }: { onClose: () => void }) {
                 {g.label}
               </h2>
               <ul>
-                {g.items.map((item) => {
-                  const index = flat.indexOf(item);
+                {g.items.map((entry) => {
+                  const item = entry.doc;
+                  const index = flat.indexOf(entry);
                   return (
                     <li key={item.url + index}>
                       <Link
@@ -246,11 +331,9 @@ export function SearchOverlay({ onClose }: { onClose: () => void }) {
                       >
                         <span className="min-w-0">
                           <span className="block truncate text-sm">{item.title}</span>
-                          {item.summary && (
-                            <span className="block truncate text-xs text-text-muted">
-                              {item.summary}
-                            </span>
-                          )}
+                          <span className="block truncate text-xs text-text-muted">
+                            {entry.snippet ?? item.summary}
+                          </span>
                         </span>
                         {index === active && (
                           <CornerDownLeft

@@ -6,6 +6,8 @@ import { site } from "@/lib/site";
 import { ContentCard, ProjectCard } from "@/components/Cards";
 import { MomentItem } from "@/components/MomentItem";
 import { EmptyState } from "@/components/PageHeader";
+import { ProfilePanel, TagCloudPanel } from "@/components/HomePanels";
+import { T } from "@/components/LangProvider";
 
 export const revalidate = 300;
 
@@ -47,11 +49,19 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* 简介 + 标签云 + RSS */}
+      <section className="mt-10 grid items-start gap-4 tablet:grid-cols-[300px_1fr]">
+        <ProfilePanel />
+        <TagCloudPanel />
+      </section>
+
       {/* 最新文章 */}
       <section className="mt-12" aria-labelledby="home-posts">
-        <SectionTitle id="home-posts" title="最新文章" href="/posts" />
+        <SectionTitle id="home-posts" k="home.latestPosts" href="/posts" />
         {posts.length === 0 ? (
-          <EmptyState>还没有文章，写完第一篇就会出现在这里。</EmptyState>
+          <EmptyState>
+            <T k="empty.posts" />
+          </EmptyState>
         ) : (
           <div className="grid gap-4 tablet:grid-cols-2">
             {posts.map((p) => (
@@ -63,9 +73,11 @@ export default async function HomePage() {
 
       {/* 最新说说 */}
       <section className="mt-12" aria-labelledby="home-moments">
-        <SectionTitle id="home-moments" title="最新说说" href="/moments" />
+        <SectionTitle id="home-moments" k="home.latestMoments" href="/moments" />
         {moments.length === 0 ? (
-          <EmptyState>说说还没有内容，去 /admin 发一条。</EmptyState>
+          <EmptyState>
+            <T k="empty.moments" />
+          </EmptyState>
         ) : (
           <div className="space-y-4">
             {moments.map((m) => (
@@ -77,9 +89,11 @@ export default async function HomePage() {
 
       {/* 精选作品 */}
       <section className="mt-12" aria-labelledby="home-projects">
-        <SectionTitle id="home-projects" title="精选作品" href="/projects" />
+        <SectionTitle id="home-projects" k="home.featuredProjects" href="/projects" />
         {projects.length === 0 ? (
-          <EmptyState>还没有标记为精选的作品。</EmptyState>
+          <EmptyState>
+            <T k="empty.projects" />
+          </EmptyState>
         ) : (
           <div className="grid gap-4 tablet:grid-cols-2 desktop:grid-cols-3">
             {projects.map((p) => (
@@ -94,23 +108,23 @@ export default async function HomePage() {
 
 function SectionTitle({
   id,
-  title,
+  k,
   href,
 }: {
   id: string;
-  title: string;
+  k: Parameters<typeof T>[0]["k"];
   href: string;
 }) {
   return (
     <div className="mb-4 flex items-baseline justify-between">
       <h2 id={id} className="text-lg font-semibold">
-        {title}
+        <T k={k} />
       </h2>
       <Link
         href={href}
         className="inline-flex items-center gap-1 text-sm text-text-muted transition-colors hover:text-accent"
       >
-        全部
+        <T k="action.viewAll" />
         <ArrowRight className="h-4 w-4" strokeWidth={1.5} />
       </Link>
     </div>

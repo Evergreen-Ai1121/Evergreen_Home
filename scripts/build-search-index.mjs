@@ -22,6 +22,9 @@ function stripMarkdown(body) {
     .trim();
 }
 
+/** 正文也进索引（搜得到正文里的词）。截断到 3000 字，控制索引体积 */
+const BODY_LIMIT = 3000;
+
 const items = [];
 
 for (const c of COLLECTIONS) {
@@ -33,13 +36,15 @@ for (const c of COLLECTIONS) {
     if (data.draft) continue;
     const slug = file.replace(/\.mdx$/, "");
     const summary = String(data.summary ?? data.description ?? "").slice(0, 120);
+    const plain = stripMarkdown(content);
     items.push({
       type: c.type,
       title: String(data.title ?? slug),
-      summary: summary || stripMarkdown(content).slice(0, 120),
+      summary: summary || plain.slice(0, 120),
       tags: Array.isArray(data.tags) ? data.tags.map(String) : [],
       url: `${c.base}${encodeURIComponent(slug)}`,
       date: data.date ? String(data.date).slice(0, 10) : "",
+      body: plain.slice(0, BODY_LIMIT),
     });
   }
 }
