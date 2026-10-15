@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getAllTags, getDocsByTag } from "@/lib/content";
 import { PageHeader } from "@/components/PageHeader";
+import { Reveal } from "@/components/Reveal";
 import { ContentCard, NoteItem, ProjectCard } from "@/components/Cards";
 import { T } from "@/components/LangProvider";
 
@@ -38,8 +39,15 @@ export default async function TagPage({ params }: { params: Promise<{ tag: strin
         </Link>
       </PageHeader>
       <div className="grid gap-4 tablet:grid-cols-2">
-        {docs.map((d) => (
-          <div key={`${d.type}-${d.slug}`}>{cardOf(d)}</div>
+        {docs.map((d, i) => (
+          <Reveal
+            key={`${d.type}-${d.slug}`}
+            index={i}
+            variant="rise"
+            className="h-full [&>*]:h-full"
+          >
+            {cardOf(d)}
+          </Reveal>
         ))}
       </div>
     </div>

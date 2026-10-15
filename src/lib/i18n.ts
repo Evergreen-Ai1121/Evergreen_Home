@@ -205,16 +205,39 @@ export function translate(lang: Lang, key: DictKey): string {
   return DICTS[lang][key] ?? DICTS.zh[key];
 }
 
+const MONTHS_EN = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
+
 /** 日期随语言切换：`2026 年 10 月 13 日` ↔ `Oct 13, 2026` */
 export function formatDate(date: string, lang: Lang): string {
   if (!date) return "";
   const [y, m, d] = date.split("-").map(Number);
   if (!y || !m || !d) return date;
   if (lang === "en") {
-    const names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    return `${names[m - 1]} ${d}, ${y}`;
+    return `${MONTHS_EN[m - 1]} ${d}, ${y}`;
   }
   return `${y} 年 ${m} 月 ${d} 日`;
+}
+
+/** 归档页在年份分组下只显示月日：`10 月 13 日` ↔ `Oct 13` */
+export function formatMonthDay(date: string, lang: Lang): string {
+  if (!date) return "";
+  const [, m, d] = date.split("-").map(Number);
+  if (!m || !d) return date;
+  if (lang === "en") return `${MONTHS_EN[m - 1]} ${d}`;
+  return `${m} 月 ${d} 日`;
+}
+
+/** 说说时间：带时分。库里存 UTC，展示按本地时区（和日期部分保持一致） */
+export function formatDateTime(iso: string, lang: Lang): string {
+  if (!iso) return "";
+  const d = new Date(iso.replace(" ", "T") + (iso.includes("Z") ? "" : "Z"));
+  if (Number.isNaN(d.getTime())) return iso;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const day = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  return `${formatDate(day, lang)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 export const LANG_LABEL: Record<Lang, string> = { zh: "中", en: "EN" };

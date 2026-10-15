@@ -56,10 +56,11 @@ export async function listComments(slug: string): Promise<Comment[]> {
   return (res.rows as unknown as Row[]).map(toComment);
 }
 
-/** Gravatar 取邮箱小写后的 md5；d=404 让前端在取不到头像时回退到昵称首字 */
+/** 头像取邮箱小写后的 md5；d=404 让前端在取不到头像时回退到昵称首字。
+ * 走 Cravatar 国内节点：gravatar.com 在本地实测超时，cravatar.cn 会再跳一次到 cn 节点（慢一跳），故直连。 */
 function gravatarUrl(email: string): string {
   const hash = createHash("md5").update(email.toLowerCase()).digest("hex");
-  return `https://www.gravatar.com/avatar/${hash}?d=404&s=80`;
+  return `https://cn.cravatar.com/avatar/${hash}?d=404&s=80`;
 }
 
 /** 把库里的评论转成可公开下发的结构：邮箱只留在服务端 */

@@ -10,6 +10,8 @@ export function GlowBackground({ className }: { className?: string }) {
       aria-hidden
       className={cn("pointer-events-none fixed inset-0 -z-10 overflow-hidden", className)}
     >
+      {/* 全站背景照片：垫在光斑下面，光斑继续负责染色统一；透明度/压暗见 globals.css 的 --bg-photo-* */}
+      <div className="bg-photo absolute inset-0" />
       <div className="absolute -left-[10%] -top-[15%] h-[46rem] w-[46rem] rounded-full bg-glow-a blur-[110px] animate-glow-a" />
       <div className="absolute right-[-12%] top-[8%] h-[38rem] w-[38rem] rounded-full bg-glow-b blur-[120px] animate-glow-b" />
       <div className="absolute bottom-[-18%] left-[25%] h-[42rem] w-[42rem] rounded-full bg-glow-c blur-[130px] animate-glow-c" />

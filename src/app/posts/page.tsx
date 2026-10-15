@@ -2,6 +2,7 @@ import { getCollection, getTags } from "@/lib/content";
 import { ContentCard } from "@/components/Cards";
 import { Pagination } from "@/components/Pagination";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
+import { Reveal } from "@/components/Reveal";
 import { T } from "@/components/LangProvider";
 import { TagFilter } from "@/components/TagFilter";
 
@@ -38,8 +39,10 @@ export default async function PostsPage({
       ) : (
         <>
           <div className="grid gap-4 tablet:grid-cols-2">
-            {posts.map((p) => (
-              <ContentCard key={p.slug} doc={p} />
+            {posts.map((p, i) => (
+              <Reveal key={p.slug} index={i} variant="rise" className="h-full [&>*]:h-full">
+                <ContentCard doc={p} />
+              </Reveal>
             ))}
           </div>
           <Pagination page={page} totalPages={totalPages} href={href} />

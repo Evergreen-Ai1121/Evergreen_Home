@@ -104,13 +104,20 @@ export function TableOfContents({
     const box = scrollRef.current;
     const el = itemRefs.current.get(activeId);
     if (!box || !el || box.clientHeight === 0) return;
-    const top = el.offsetTop;
-    const bottom = top + el.offsetHeight;
+
+    // 用 rect 反推「元素在滚动内容坐标系里的位置」：
+    // 不能用 el.offsetTop —— <li> 是 relative，<a> 的 offsetParent 会是 li 而不是滚动容器，
+    // 量出来恒为 0，判定永远不触发（手动滚过目录后还会被弹回顶部）。
+    const boxTop = box.getBoundingClientRect().top;
+    const elRect = el.getBoundingClientRect();
+    const top = elRect.top - boxTop + box.scrollTop;
+    const bottom = top + elRect.height;
+
     const outOfView = top < box.scrollTop || bottom > box.scrollTop + box.clientHeight;
     if (!outOfView) return;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     box.scrollTo({
-      top: Math.max(0, top - (box.clientHeight - el.offsetHeight) / 2),
+      top: Math.max(0, top - (box.clientHeight - elRect.height) / 2),
       behavior: reduced ? "auto" : "smooth",
     });
   }, [activeId, open]);

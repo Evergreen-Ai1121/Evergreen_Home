@@ -2,6 +2,7 @@ import { getCollection, getTags } from "@/lib/content";
 import { ProjectCard } from "@/components/Cards";
 import { Pagination } from "@/components/Pagination";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
+import { Reveal } from "@/components/Reveal";
 import { T } from "@/components/LangProvider";
 import { TagFilter } from "@/components/TagFilter";
 
@@ -41,8 +42,10 @@ export default async function ProjectsPage({
       ) : (
         <>
           <div className="grid gap-4 tablet:grid-cols-2 desktop:grid-cols-3">
-            {projects.map((p) => (
-              <ProjectCard key={p.slug} doc={p} />
+            {projects.map((p, i) => (
+              <Reveal key={p.slug} index={i} variant="rise" className="h-full [&>*]:h-full">
+                <ProjectCard doc={p} />
+              </Reveal>
             ))}
           </div>
           <Pagination page={page} totalPages={totalPages} href={href} />

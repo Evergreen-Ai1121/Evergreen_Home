@@ -3,6 +3,8 @@ import { getAllDocs, type DocMeta } from "@/lib/content";
 import { hrefOf } from "@/lib/doc";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { T } from "@/components/LangProvider";
+import { LocalDate } from "@/components/LocalDate";
+import { Reveal } from "@/components/Reveal";
 import { cn } from "@/lib/utils";
 
 export const metadata = { title: "归档" };
@@ -45,33 +47,38 @@ export default function ArchivePage() {
       ) : (
         <div className="desktop:grid desktop:grid-cols-[1fr_160px] desktop:gap-10">
           <div className="space-y-10">
-            {groups.map(([year, items]) => (
-              <section key={year} id={`year-${year}`} className="scroll-mt-24">
-                <h2 className="mb-3 text-sm font-medium text-text-muted">{year}</h2>
-                <ul className="space-y-1">
-                  {items.map((d) => (
-                    <li key={`${d.type}-${d.slug}`}>
-                      <Link
-                        href={hrefOf(d)}
-                        className="flex flex-wrap items-baseline gap-x-3 gap-y-1 rounded-control px-2 py-2 transition-colors hover:bg-surface"
-                      >
-                        <time className="text-xs text-text-muted" dateTime={d.date}>
-                          {d.date.slice(5)}
-                        </time>
-                        <span
-                          className={cn(
-                            "rounded-pill px-2 py-0.5 text-[11px]",
-                            TYPE_STYLE[d.type],
-                          )}
+            {/* 整年一组一起弹：Reveal 渲染 div，不能塞进 <ul> 里去包 <li> */}
+            {groups.map(([year, items], i) => (
+              <Reveal key={year} index={i}>
+                <section id={`year-${year}`} className="scroll-mt-24">
+                  <h2 className="mb-3 text-sm font-medium text-text-muted">{year}</h2>
+                  <ul className="space-y-1">
+                    {items.map((d) => (
+                      <li key={`${d.type}-${d.slug}`}>
+                        <Link
+                          href={hrefOf(d)}
+                          className="flex flex-wrap items-baseline gap-x-3 gap-y-1 rounded-control px-2 py-2 transition-colors hover:bg-surface"
                         >
-                          {TYPE_LABEL[d.type]}
-                        </span>
-                        <span className="min-w-0 flex-1 text-[15px]">{d.title}</span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </section>
+                          <LocalDate
+                            date={d.date}
+                            variant="monthDay"
+                            className="text-xs text-text-muted"
+                          />
+                          <span
+                            className={cn(
+                              "rounded-pill px-2 py-0.5 text-[11px]",
+                              TYPE_STYLE[d.type],
+                            )}
+                          >
+                            {TYPE_LABEL[d.type]}
+                          </span>
+                          <span className="min-w-0 flex-1 text-[15px]">{d.title}</span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              </Reveal>
             ))}
           </div>
 

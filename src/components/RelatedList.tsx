@@ -5,7 +5,7 @@ import type { DocMeta } from "@/lib/content";
 import { hrefOf } from "@/lib/doc";
 import { GlassCard } from "./GlassCard";
 import { useLang } from "./LangProvider";
-import type { DictKey } from "@/lib/i18n";
+import { formatDate, type DictKey } from "@/lib/i18n";
 
 const TYPE_LABEL: Record<DocMeta["type"], DictKey> = {
   posts: "nav.posts",
@@ -15,7 +15,7 @@ const TYPE_LABEL: Record<DocMeta["type"], DictKey> = {
 
 /** 同标签的相关推荐（跨三类内容），没命中时由调用方降级成最新几篇 */
 export function RelatedList({ items }: { items: DocMeta[] }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   if (items.length === 0) return null;
   return (
     <section aria-label="相关推荐" className="mt-12">
@@ -25,7 +25,7 @@ export function RelatedList({ items }: { items: DocMeta[] }) {
           <GlassCard key={`${d.type}-${d.slug}`} interactive>
             <Link href={hrefOf(d)} className="flex h-full flex-col gap-1 p-4">
               <span className="text-xs text-text-muted">
-                {t(TYPE_LABEL[d.type])} · {d.date}
+                {t(TYPE_LABEL[d.type])} · {formatDate(d.date, lang)}
               </span>
               <span className="line-clamp-2 text-[15px] font-medium">{d.title}</span>
             </Link>

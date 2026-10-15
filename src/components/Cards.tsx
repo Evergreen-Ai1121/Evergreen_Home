@@ -3,6 +3,7 @@ import { ArrowUpRight, Clock, Tag } from "lucide-react";
 import type { DocMeta } from "@/lib/content";
 import { cn } from "@/lib/utils";
 import { GlassCard } from "./GlassCard";
+import { LocalDate } from "./LocalDate";
 import { SafeImage } from "./SafeImage";
 
 /** 标签药丸：全站统一 accent 底色，和分类徽标一致 */
@@ -50,12 +51,10 @@ export function ContentCard({ doc }: { doc: DocMeta }) {
         )}
         <div className="p-5">
           <div className="flex flex-wrap items-center gap-2 text-xs text-text-muted">
-            <time
-              dateTime={doc.date}
+            <LocalDate
+              date={doc.date}
               className="rounded-pill bg-surface-strong px-2 py-0.5 text-text-muted"
-            >
-              {doc.date}
-            </time>
+            />
             <span className="inline-flex items-center gap-1">
               <Clock className="h-3.5 w-3.5" strokeWidth={1.5} />
               {doc.readingTime} 分钟
@@ -90,12 +89,10 @@ export function NoteItem({ doc }: { doc: DocMeta }) {
               {doc.category}
             </span>
           )}
-          <time
-            dateTime={doc.date}
+          <LocalDate
+            date={doc.date}
             className="rounded-pill bg-surface-strong px-2 py-0.5 text-text-muted"
-          >
-            {doc.date}
-          </time>
+          />
           <BadgeChip badge={doc.badge} />
         </div>
         <h3 className="text-[17px] font-semibold">{doc.title}</h3>

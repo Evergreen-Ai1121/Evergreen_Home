@@ -25,7 +25,15 @@
 :root {
   --font-display: "Smiley Sans", "Smiley Sans Fallback", "PingFang SC", "Microsoft YaHei", sans-serif;
   --c-bg: #f6f8fc;
-  --c-surface: rgba(255, 255, 255, 0.62);
+  /* 卡片玻璃：静止态要等于"弹出过程中"的观感（偏淡偏灰，Evergreen 2026-10-15 定）。
+     .glass 里已去掉 saturate（那是"停稳后变深变紫"的来源）。
+     通透感两个旋钮：白度（越高越奶白）和 blur（越大照片越被糊成色块）。
+     0.35 白 + blur 8px：Evergreen 要求明显透出背景照片（2026-10-15 第三次加深）。 */
+  --c-surface: rgba(255, 255, 255, 0.3);
+  /* 卡片悬停底色：比静止态只抬一点点。不能用 --c-surface-strong（0.85 白），
+     悬停时会白成一片、把照片全盖掉（Evergreen 2026-10-15 明确反对）。
+     悬停反馈主要靠上浮和阴影，底色只做轻微提示。 */
+  --c-surface-hover: rgba(255, 255, 255, 0.42);
   --c-surface-strong: rgba(255, 255, 255, 0.85);
   --c-border: rgba(15, 23, 42, 0.08);
   --c-text: #1b1f27;
@@ -33,31 +41,46 @@
   --c-text-muted: #475263;
   /* 紫罗兰主色：浅色下压到 #5B3FC4 是为了连光斑压过的地方（实测背景 #cacffe）也能到 4.5:1 */
   --c-accent: #5b3fc4;
-  --c-accent-soft: rgba(109, 79, 208, 0.12);
+  /* 标签药丸底色：从半透明紫改为不透明实色。卡片通透化后，半透明的紫会被
+     身后的照片/光斑冲掉（12% 时药丸和卡片紫度差只剩 19，看着像掉了色）；
+     实色让药丸在任何背景上都稳定，文字对比度也不再随背景浮动。 */
+  --c-accent-soft: #e2d9f6;
   --c-glow-a: rgba(167, 139, 250, 0.5);
   --c-glow-b: rgba(196, 181, 253, 0.45);
   --c-glow-c: rgba(147, 197, 253, 0.4);
   --c-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 12px 32px -16px rgba(88, 60, 180, 0.16);
   --c-scrim: rgba(246, 248, 252, 0.72);
+  /* 全站背景照片（public/images/bg.webp）：Evergreen 要求强通透感（2026-10-15），
+     0.12 → 0.22 —— 卡片白度/blur 已到收益边界（再降卡片会消失），
+     照片浓度才是"透出背景"的主杠杆。0.22 接近可读性压力上限，改完必须跑对比度。 */
+  --bg-photo-opacity: 0.22;
+  --bg-photo-filter: none;
   color-scheme: light;
 }
 
 .dark {
   --c-bg: #0b0e14;
-  --c-surface: rgba(255, 255, 255, 0.055);
+  /* 深色同向：0.07 → 0.05，再薄一点让照片透出来（深色下本来就很透，
+     再降会让卡片失去"板"的存在感） */
+  --c-surface: rgba(255, 255, 255, 0.05);
   --c-surface-strong: rgba(255, 255, 255, 0.09);
+  /* 深色悬停：只抬 3 个点 */
+  --c-surface-hover: rgba(255, 255, 255, 0.08);
   /* 深色下边框稍亮一点，卡片轮廓在纯黑背景上才立得住 */
   --c-border: rgba(255, 255, 255, 0.13);
   --c-text: #e6e9ef;
   --c-text-muted: #99a2b2;
   --c-accent: #a78bfa;
-  --c-accent-soft: rgba(167, 139, 250, 0.2);
+  --c-accent-soft: #322a52;
   /* 深色光斑整体加强一档，避免大面积死黑显平 */
   --c-glow-a: rgba(124, 92, 224, 0.3);
   --c-glow-b: rgba(167, 139, 250, 0.24);
   --c-glow-c: rgba(96, 165, 250, 0.2);
   --c-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   --c-scrim: rgba(6, 8, 12, 0.72);
+  /* 深色下同一张照片：压暗降饱和，否则白墙区域会在黑底上发灰发亮 */
+  --bg-photo-opacity: 0.18;
+  --bg-photo-filter: brightness(0.55) saturate(0.7);
   color-scheme: dark;
 }
 
@@ -135,19 +158,22 @@
 }
 
 @layer components {
+  /* 玻璃不加 saturate：它是"卡片停稳后比弹出时更深更紫"的来源
+     （把透进来的照片加了 40% 饱和度）。去掉后静止态 = 弹出态的偏灰观感。
+     blur 只给 8px：磨砂太重会把照片糊成均匀色块，卡片就显得是纯白板。 */
   .glass {
     background: var(--c-surface);
     border: 1px solid var(--c-border);
-    backdrop-filter: blur(16px) saturate(140%);
-    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     box-shadow: var(--c-shadow);
   }
 
   .glass-strong {
     background: var(--c-surface-strong);
     border: 1px solid var(--c-border);
-    backdrop-filter: blur(20px) saturate(160%);
-    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     box-shadow: var(--c-shadow);
   }
 
@@ -366,4 +392,70 @@
   overflow-x: auto;
   overflow-y: hidden;
   padding: 4px 0;
+}
+
+/* Lenis 平滑滚动接管：全局 html 上已有 scroll-behavior: smooth，
+   两者会互相打架（浏览器会把 Lenis 写入的 scrollTop 再平滑一次，出现拖尾）。
+   这里挂在 html.lenis 上而不是 lenis-smooth —— 后者只在滚动进行中才出现，
+   用它做覆盖来不及。页内锚点由 Lenis 自己的 anchors 选项接管，不受影响。 */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+html.lenis {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+
+/* 首页 hero 入场（加载即播，纯 CSS 不等 JS —— 避免推迟 LCP）
+   hero-rise 只动 transform、保持 opacity 1：h1 是 LCP 元素，
+   只要它被画出来就算数，位移不影响；淡入只给非 LCP 的副元素。
+   reduced-motion 时上面 @layer base 的全局规则会把时长压到 0，直接落到终态。 */
+@keyframes hero-rise {
+  from {
+    transform: translateY(14px);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@keyframes hero-fade {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.hero-rise,
+.hero-fade {
+  animation-duration: 0.62s;
+  animation-timing-function: cubic-bezier(0.34, 1.4, 0.64, 1);
+  animation-fill-mode: backwards;
+}
+.hero-rise {
+  animation-name: hero-rise;
+}
+.hero-fade {
+  animation-name: hero-fade;
+}
+
+/* 全站背景照片：固定不随滚动，优先露出图片下方（裁上方），透明度与深色压暗由令牌控制 */
+.bg-photo {
+  background-image: url("/images/bg.webp");
+  background-position: center bottom;
+  background-size: cover;
+  background-repeat: no-repeat;
+  opacity: var(--bg-photo-opacity);
+  filter: var(--bg-photo-filter);
 }

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Tag } from "lucide-react";
 import { getAllTags } from "@/lib/content";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
+import { Reveal } from "@/components/Reveal";
 import { T } from "@/components/LangProvider";
 import { cn } from "@/lib/utils";
 
@@ -29,25 +30,28 @@ export default function TagsPage() {
           <T k="empty.tags" />
         </EmptyState>
       ) : (
-        <div className="glass rounded-card p-6">
-          <ul className="flex flex-wrap items-center gap-3">
-            {tags.map((t) => (
-              <li key={t.name}>
-                <Link
-                  href={`/tags/${encodeURIComponent(t.name)}`}
-                  className={cn(
-                    "inline-flex items-center gap-1.5 rounded-pill bg-accent-soft px-3 py-1 text-accent transition-opacity hover:opacity-80",
-                    sizeOf(t.count, max),
-                  )}
-                >
-                  <Tag className="h-3.5 w-3.5 opacity-70" strokeWidth={1.5} />
-                  {t.name}
-                  <span className="text-xs opacity-70">{t.count}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
+        // 标签云整块一起弹（Reveal 渲染的是 div，插进 <ul> 里包 <li> 会产生非法嵌套）
+        <Reveal variant="rise">
+          <div className="glass rounded-card p-6">
+            <ul className="flex flex-wrap items-center gap-3">
+              {tags.map((t) => (
+                <li key={t.name}>
+                  <Link
+                    href={`/tags/${encodeURIComponent(t.name)}`}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 rounded-pill bg-accent-soft px-3 py-1 text-accent transition-opacity hover:opacity-80",
+                      sizeOf(t.count, max),
+                    )}
+                  >
+                    <Tag className="h-3.5 w-3.5 opacity-70" strokeWidth={1.5} />
+                    {t.name}
+                    <span className="text-xs opacity-70">{t.count}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </Reveal>
       )}
     </div>
   );

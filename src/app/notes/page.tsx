@@ -3,6 +3,7 @@ import { getCollection, getCategories, getTags, type DocMeta } from "@/lib/conte
 import { NoteItem } from "@/components/Cards";
 import { Pagination } from "@/components/Pagination";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
+import { Reveal } from "@/components/Reveal";
 import { T } from "@/components/LangProvider";
 import { cn } from "@/lib/utils";
 
@@ -73,8 +74,10 @@ export default async function NotesPage({
               <section key={group.year}>
                 <h2 className="mb-3 text-sm font-medium text-text-muted">{group.year}</h2>
                 <div className="space-y-3">
-                  {group.items.map((doc) => (
-                    <NoteItem key={doc.slug} doc={doc} />
+                  {group.items.map((doc, i) => (
+                    <Reveal key={doc.slug} index={i} variant="rise">
+                      <NoteItem doc={doc} />
+                    </Reveal>
                   ))}
                 </div>
               </section>

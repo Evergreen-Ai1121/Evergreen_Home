@@ -3,7 +3,7 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { DocMeta } from "@/lib/content";
 import { hrefOf } from "@/lib/doc";
-import type { DictKey } from "@/lib/i18n";
+import { formatDate, type DictKey } from "@/lib/i18n";
 import { GlassCard } from "./GlassCard";
 import { useLang } from "./LangProvider";
 
@@ -24,6 +24,7 @@ function Card({
   label: string;
   typeLabel: string;
 }) {
+  const { lang } = useLang();
   return (
     <GlassCard interactive className="flex-1">
       <a href={hrefOf(doc)} className="flex h-full flex-col gap-1 p-4">
@@ -37,7 +38,7 @@ function Card({
         </span>
         <span className="line-clamp-2 text-[15px] font-medium">{doc.title}</span>
         <span className="mt-auto text-xs text-text-muted">
-          {typeLabel} · {doc.date}
+          {typeLabel} · {formatDate(doc.date, lang)}
         </span>
       </a>
     </GlassCard>
