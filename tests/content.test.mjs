@@ -12,6 +12,8 @@ const { normalizeDate, pageNumber, blogHref, compareProjects } = await loadTs(
 fs.mkdirSync(".tmp", { recursive: true });
 const temporary = fs.mkdtempSync(path.join(root, ".tmp", "content-test-"));
 fs.cpSync("content", path.join(temporary, "content"), { recursive: true });
+fs.mkdirSync(path.join(temporary, "content", "posts"), { recursive: true });
+fs.mkdirSync(path.join(temporary, "content", "notes"), { recursive: true });
 process.chdir(temporary);
 const previousEnv = process.env.NODE_ENV;
 process.env.NODE_ENV = "production";
@@ -69,8 +71,14 @@ test("production drafts disappear from lists, direct reads and related results",
 });
 test("Markdown readers preserve updated dates and resolve explicit backlinks", () => {
   fs.writeFileSync(
+    "content/notes/related-fixture.mdx",
+    "---\ntitle: Related fixture\ndate: 2026-10-01\n---\n## Related",
+  );
+  fs.writeFileSync(
     "content/posts/markdown-check.md",
-    "---\ntitle: Markdown\ndate: 2026-10-01\nupdated: 2026-10-14\nrelated: [notes/react-server-components]\n---\n## Content\nsearchable markdown",
+    "---\ntitle: Markdown\ndate: 2026-10-01\nupdated: 2026-10-14\nrelated: [notes/related-fixture]\n---\n## Content\nsearchable markdown " +
+      "long text ".repeat(500) +
+      "endofdocumentkeyword",
   );
   const doc = content.getDoc("posts", "markdown-check");
   assert.equal(doc.updated, "2026-10-14");
@@ -79,7 +87,7 @@ test("Markdown readers preserve updated dates and resolve explicit backlinks", (
   );
   assert.ok(
     content
-      .getExplicitRelated(content.getDoc("notes", "react-server-components"))
+      .getExplicitRelated(content.getDoc("notes", "related-fixture"))
       .some((d) => d.slug === "markdown-check"),
   );
 });
@@ -104,6 +112,11 @@ test("the actual search builder includes Markdown, normalizes YAML dates and exc
   );
   const index = JSON.parse(fs.readFileSync("public/search-index.json", "utf8"));
   assert.ok(index.some((item) => item.url === "/posts/markdown-check"));
+  assert.ok(
+    index
+      .find((item) => item.url === "/posts/markdown-check")
+      .body.endsWith("endofdocumentkeyword"),
+  );
   assert.equal(
     index.find((item) => item.url === "/posts/markdown-check").date,
     "2026-10-01",

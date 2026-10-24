@@ -32,11 +32,8 @@ export const site = {
     { href: "/blog", key: "blog" },
     { href: "/about", key: "about" },
   ],
-  evidence: [
-    { key: "interface", refs: ["notes/react-server-components"] },
-    {
-      key: "delivery",
-      refs: ["posts/debug-image-cls", "notes/glassmorphism-performance"],
-    },
-  ],
+  evidence: [] as {
+    key: "interface" | "data" | "ai" | "delivery";
+    refs: string[];
+  }[],
 } as const;

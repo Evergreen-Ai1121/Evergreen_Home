@@ -27,9 +27,6 @@ function stripMarkdown(body) {
     .trim();
 }
 
-/** 正文也进索引（搜得到正文里的词）。截断到 3000 字，控制索引体积 */
-const BODY_LIMIT = 3000;
-
 const items = [];
 
 for (const c of COLLECTIONS) {
@@ -52,7 +49,7 @@ for (const c of COLLECTIONS) {
       tags: Array.isArray(data.tags) ? data.tags.map(String) : [],
       url: `${c.base}${encodeURIComponent(slug)}`,
       date: normalizeDate(data.date),
-      body: plain.slice(0, BODY_LIMIT),
+      body: plain,
     });
   }
 }

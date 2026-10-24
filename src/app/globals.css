@@ -1157,7 +1157,7 @@
 [data-rehype-pretty-code-figure] pre {
   overflow-x: auto;
 }
-[data-rehype-pretty-code-figure] code {
+[data-rehype-pretty-code-figure] pre code {
   display: grid;
   font-size: 14px;
   line-height: 1.7;

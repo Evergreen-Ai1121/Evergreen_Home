@@ -16,12 +16,18 @@ export function ThemeToggle({ className }: { className?: string }) {
   const [theme, setTheme] = useState<"light" | "dark" | null>(null);
 
   useEffect(() => {
-    setTheme(
-      document.documentElement.classList.contains("dark") ? "dark" : "light",
-    );
+    const syncTheme = () =>
+      setTheme(
+        document.documentElement.classList.contains("dark") ? "dark" : "light",
+      );
+    syncTheme();
+    const observer = new MutationObserver(syncTheme);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+    return () => observer.disconnect();
   }, []);
-
-  const next = theme === "dark" ? "light" : "dark";
 
   return (
     <button
@@ -29,6 +35,9 @@ export function ThemeToggle({ className }: { className?: string }) {
       aria-label={theme === "dark" ? t("ui.light") : t("ui.dark")}
       title={theme === "dark" ? t("ui.light") : t("ui.dark")}
       onClick={() => {
+        const next = document.documentElement.classList.contains("dark")
+          ? "light"
+          : "dark";
         apply(next);
         setTheme(next);
       }}

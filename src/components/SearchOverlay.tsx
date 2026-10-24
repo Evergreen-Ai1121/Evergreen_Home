@@ -15,7 +15,7 @@ export interface SearchDoc {
   tags: string[];
   url: string;
   date?: string;
-  /** 正文全文（构建期 stripMarkdown，截断 3000 字），搜正文用；说说没有 */
+  /** 构建期移除 Markdown 标记后的完整正文，用于全文搜索。 */
   body?: string;
 }
 
