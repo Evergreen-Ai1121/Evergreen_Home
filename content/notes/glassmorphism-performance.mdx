@@ -1,4 +1,6 @@
 ---
+featured: true
+language: zh-CN
 title: 玻璃拟态的性能代价
 date: 2026-09-25
 category: 前端
@@ -25,7 +27,9 @@ summary: backdrop-filter 很好看，但用错了会让滚动掉帧。
   animation: drift 26s ease-in-out infinite;
 }
 @keyframes drift {
-  50% { transform: translate3d(6%, -4%, 0) scale(1.08); }
+  50% {
+    transform: translate3d(6%, -4%, 0) scale(1.08);
+  }
 }
 ```
 

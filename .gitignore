@@ -14,3 +14,6 @@ next-env.d.ts
 
 .vercel
 .env*
+
+.tmp/
+reports/

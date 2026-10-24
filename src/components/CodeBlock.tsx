@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Check, ChevronDown, Copy } from "lucide-react";
+import { useLang } from "./LangProvider";
 import { cn } from "@/lib/utils";
 
 /** 超过这么多行就折叠，避免长代码块一屏放不下 */
@@ -18,6 +19,7 @@ export function CodeBlock({
   className,
   ...rest
 }: React.HTMLAttributes<HTMLPreElement>) {
+  const { t } = useLang();
   const preRef = useRef<HTMLPreElement>(null);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [lang, setLang] = useState<string | null>(null);
@@ -31,9 +33,12 @@ export function CodeBlock({
     setLines(code?.querySelectorAll("[data-line]").length ?? 0);
   }, [children]);
 
-  useEffect(() => () => {
-    if (copyTimer.current) clearTimeout(copyTimer.current);
-  }, []);
+  useEffect(
+    () => () => {
+      if (copyTimer.current) clearTimeout(copyTimer.current);
+    },
+    [],
+  );
 
   const collapsible = lines > COLLAPSE_LINES;
   const collapsed = collapsible && !expanded;
@@ -74,7 +79,12 @@ export function CodeBlock({
               {lang}
             </span>
           )}
-          <button type="button" onClick={copy} aria-label="复制代码" className={btn}>
+          <button
+            type="button"
+            onClick={copy}
+            aria-label={t("action.copyCode")}
+            className={btn}
+          >
             {copied ? (
               <Check className="h-4 w-4 text-accent" strokeWidth={1.5} />
             ) : (
@@ -87,7 +97,11 @@ export function CodeBlock({
       <pre
         ref={preRef}
         {...rest}
-        className={cn(className, "m-0 rounded-none border-0 bg-transparent", collapsed && "max-h-[320px] overflow-hidden")}
+        className={cn(
+          className,
+          "m-0 rounded-none border-0 bg-transparent",
+          collapsed && "max-h-[320px] overflow-hidden",
+        )}
       >
         {children}
       </pre>
@@ -107,10 +121,15 @@ export function CodeBlock({
           className="absolute inset-x-0 bottom-0 flex min-h-11 items-center justify-center gap-1 border-t border-border bg-surface text-xs text-text-muted backdrop-blur transition-colors hover:text-accent"
         >
           <ChevronDown
-            className={cn("h-4 w-4 transition-transform", expanded && "rotate-180")}
+            className={cn(
+              "h-4 w-4 transition-transform",
+              expanded && "rotate-180",
+            )}
             strokeWidth={1.5}
           />
-          {expanded ? "收起" : `展开全部 ${lines} 行`}
+          {expanded
+            ? t("action.collapseCode")
+            : t("action.expandCode") + " · " + lines}
         </button>
       )}
     </div>

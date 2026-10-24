@@ -9,7 +9,7 @@ import type { DictKey } from "@/lib/i18n";
 import { trapTab } from "@/lib/focus";
 
 export interface SearchDoc {
-  type: "notes" | "posts" | "projects" | "moments";
+  type: "notes" | "posts" | "projects";
   title: string;
   summary: string;
   tags: string[];
@@ -37,11 +37,10 @@ const WINDOW = 60;
 const GROUP_LABEL: Record<SearchDoc["type"], DictKey> = {
   posts: "nav.posts",
   notes: "nav.notes",
-  moments: "nav.moments",
   projects: "nav.projects",
 };
 
-const GROUP_ORDER: SearchDoc["type"][] = ["posts", "notes", "moments", "projects"];
+const GROUP_ORDER: SearchDoc["type"][] = ["posts", "notes", "projects"];
 
 type Status = "idle" | "loading" | "ready" | "error";
 
@@ -67,7 +66,10 @@ function withMarks(text: string, ranges: [number, number][]) {
     const end = Math.min(text.length, e + 1);
     if (start > pos) nodes.push(text.slice(pos, start));
     nodes.push(
-      <mark key={`${start}-${end}`} className="rounded bg-accent-soft px-0.5 text-accent">
+      <mark
+        key={`${start}-${end}`}
+        className="rounded bg-accent-soft px-0.5 text-accent"
+      >
         {text.slice(start, end)}
       </mark>,
     );
@@ -78,7 +80,10 @@ function withMarks(text: string, ranges: [number, number][]) {
 }
 
 /** 优先从正文取片段（Fuse 的 body 匹配），没有就退回摘要，再没有就不显示 */
-function makeSnippet(doc: SearchDoc, matches: FuseMatch[]): React.ReactNode | null {
+function makeSnippet(
+  doc: SearchDoc,
+  matches: FuseMatch[],
+): React.ReactNode | null {
   const bodyHit = matches.find((m) => m.key === "body" && m.indices.length > 0);
   if (bodyHit && doc.body) {
     const ranges = mergeRanges(bodyHit.indices);
@@ -87,7 +92,13 @@ function makeSnippet(doc: SearchDoc, matches: FuseMatch[]): React.ReactNode | nu
     const end = Math.min(doc.body.length, start + WINDOW * 3);
     const local = ranges
       .filter(([s, e]) => e >= start && s < end)
-      .map(([s, e]) => [Math.max(0, s - start), Math.min(end, e - start)] as [number, number]);
+      .map(
+        ([s, e]) =>
+          [Math.max(0, s - start), Math.min(end, e - start)] as [
+            number,
+            number,
+          ],
+      );
     return (
       <>
         {start > 0 && "…"}
@@ -122,40 +133,21 @@ export function SearchOverlay({ onClose }: { onClose: () => void }) {
         ]);
         if (!idxRes.ok) throw new Error("index missing");
         const items: SearchDoc[] = await idxRes.json();
-        // 说说来自数据库，运行时补齐
-        try {
-          const mRes = await fetch("/api/moments?limit=100");
-          if (mRes.ok) {
-            const data = await mRes.json();
-            for (const m of data.items ?? []) {
-              items.push({
-                type: "moments",
-                title: m.content?.slice(0, 40) ?? "说说",
-                summary: m.content ?? "",
-                tags: [],
-                url: `/moments#moment-${m.id}`,
-                date: m.created_at?.slice(0, 10),
-              });
-            }
-          }
-        } catch {
-          /* 说说不可用时静默降级，不影响内容检索 */
-        }
         if (cancelled) return;
         setDocs(items);
-    // 权重：标题最高，其次标签与摘要，正文最低（但能命中标题里没有的词）
-    fuseRef.current = new Fuse(items, {
-      keys: [
-        { name: "title", weight: 0.4 },
-        { name: "tags", weight: 0.2 },
-        { name: "summary", weight: 0.2 },
-        { name: "body", weight: 0.2 },
-      ],
-      includeMatches: true,
-      threshold: 0.35,
-      ignoreLocation: true,
-      minMatchCharLength: 1,
-    });
+        // 权重：标题最高，其次标签与摘要，正文最低（但能命中标题里没有的词）
+        fuseRef.current = new Fuse(items, {
+          keys: [
+            { name: "title", weight: 0.4 },
+            { name: "tags", weight: 0.2 },
+            { name: "summary", weight: 0.2 },
+            { name: "body", weight: 0.2 },
+          ],
+          includeMatches: true,
+          threshold: 0.35,
+          ignoreLocation: true,
+          minMatchCharLength: 1,
+        });
         setStatus("ready");
       } catch {
         if (!cancelled) setStatus("error");
@@ -175,7 +167,8 @@ export function SearchOverlay({ onClose }: { onClose: () => void }) {
 
   const results = useMemo<Result[]>(() => {
     if (!debounced) return [];
-    if (!fuseRef.current) return docs.slice(0, 20).map((doc) => ({ doc, snippet: null }));
+    if (!fuseRef.current)
+      return docs.slice(0, 20).map((doc) => ({ doc, snippet: null }));
     return fuseRef.current
       .search(debounced, { limit: 30 })
       .map((r: { item: SearchDoc; matches?: FuseMatch[] }) => ({
@@ -201,6 +194,7 @@ export function SearchOverlay({ onClose }: { onClose: () => void }) {
 
   // 焦点陷阱 + Esc 关闭
   useEffect(() => {
+    const restoreFocus = document.activeElement as HTMLElement | null;
     inputRef.current?.focus();
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -212,6 +206,7 @@ export function SearchOverlay({ onClose }: { onClose: () => void }) {
     return () => {
       window.removeEventListener("keydown", onKey);
       document.body.style.overflow = prev;
+      restoreFocus?.focus();
     };
   }, [onClose]);
 
@@ -256,7 +251,10 @@ export function SearchOverlay({ onClose }: { onClose: () => void }) {
         onKeyDown={onKeyDown}
       >
         <div className="flex items-center gap-3 border-b border-border px-4 py-3">
-          <Search className="h-5 w-5 shrink-0 text-text-muted" strokeWidth={1.5} />
+          <Search
+            className="h-5 w-5 shrink-0 text-text-muted"
+            strokeWidth={1.5}
+          />
           <input
             ref={inputRef}
             value={query}
@@ -266,13 +264,16 @@ export function SearchOverlay({ onClose }: { onClose: () => void }) {
             aria-label={t("action.search")}
           />
           {status === "loading" && (
-            <Loader2 className="h-4 w-4 animate-spin text-text-muted" strokeWidth={1.5} />
+            <Loader2
+              className="h-4 w-4 animate-spin text-text-muted"
+              strokeWidth={1.5}
+            />
           )}
           <button
             type="button"
             onClick={onClose}
             aria-label={t("action.close")}
-            className="rounded-control p-1 text-text-muted hover:text-text"
+            className="min-h-11 min-w-11 inline-flex items-center justify-center rounded-control p-1 text-text-muted hover:text-text"
           >
             <X className="h-5 w-5" strokeWidth={1.5} />
           </button>
@@ -280,9 +281,7 @@ export function SearchOverlay({ onClose }: { onClose: () => void }) {
 
         <div ref={listRef} className="max-h-[60vh] overflow-y-auto p-2">
           {status === "error" && (
-            <p className="p-4 text-sm text-text-muted">
-{t("search.error")}
-            </p>
+            <p className="p-4 text-sm text-text-muted">{t("search.error")}</p>
           )}
 
           {status !== "error" && debounced && flat.length === 0 && (
@@ -305,9 +304,7 @@ export function SearchOverlay({ onClose }: { onClose: () => void }) {
           )}
 
           {!debounced && status === "ready" && (
-            <p className="p-4 text-sm text-text-muted">
-{t("search.help")}
-            </p>
+            <p className="p-4 text-sm text-text-muted">{t("search.help")}</p>
           )}
 
           {grouped.map((g) => (
@@ -326,12 +323,16 @@ export function SearchOverlay({ onClose }: { onClose: () => void }) {
                         onClick={onClose}
                         data-index={index}
                         className={cn(
-                          "flex items-baseline justify-between gap-3 rounded-control px-2 py-2",
-                          index === active ? "bg-accent-soft" : "hover:bg-surface",
+                          "flex min-h-11 items-baseline justify-between gap-3 rounded-control px-2 py-2",
+                          index === active
+                            ? "bg-accent-soft"
+                            : "hover:bg-surface",
                         )}
                       >
                         <span className="min-w-0">
-                          <span className="block truncate text-sm">{item.title}</span>
+                          <span className="block truncate text-sm">
+                            {item.title}
+                          </span>
                           <span className="block truncate text-xs text-text-muted">
                             {entry.snippet ?? item.summary}
                           </span>

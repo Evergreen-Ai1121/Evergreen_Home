@@ -1,56 +1,84 @@
-import { getCollection, getTags } from "@/lib/content";
-import { ProjectCard } from "@/components/Cards";
+import Link from "next/link";
+import { getCollection } from "@/lib/content";
+import { pageNumber } from "@/lib/content-rules";
+import { pageMetadata } from "@/lib/metadata";
+import { ProjectExhibit, EmptyProjects } from "@/components/Exhibit";
+import { PageHeader, EmptyState } from "@/components/PageHeader";
 import { Pagination } from "@/components/Pagination";
-import { EmptyState, PageHeader } from "@/components/PageHeader";
-import { Reveal } from "@/components/Reveal";
 import { T } from "@/components/LangProvider";
-import { TagFilter } from "@/components/TagFilter";
-
-export const metadata = { title: "作品集" };
-
-const PAGE_SIZE = 9;
-
+export const metadata = pageMetadata(
+  "项目",
+  "AI 应用与全栈开发的项目实践与案例。",
+  "/projects",
+);
 export default async function ProjectsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tag?: string; page?: string }>;
+  searchParams: Promise<{ category?: string; page?: string }>;
 }) {
-  const { tag, page: raw } = await searchParams;
+  const query = await searchParams;
   const all = getCollection("projects");
-  const filtered = tag ? all.filter((d) => d.tags.includes(tag)) : all;
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const page = Math.min(Math.max(1, Number(raw) || 1), totalPages);
-  const projects = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-
-  const href = (n: number) => {
-    const q = new URLSearchParams();
-    if (tag) q.set("tag", tag);
-    q.set("page", String(n));
-    return `/projects?${q}`;
-  };
-
+  const filter = all.length >= 6;
+  const category = filter ? query.category : undefined;
+  const categories = [...new Set(all.map((p) => p.projectCategory))];
+  const filtered = all.filter(
+    (p) => !category || p.projectCategory === category,
+  );
+  const totalPages = Math.max(1, Math.ceil(filtered.length / 9));
+  const page = pageNumber(query.page, totalPages);
+  const projects = filtered.slice((page - 1) * 9, page * 9);
+  const href = (n: number, cat = category) =>
+    "/projects?" +
+    new URLSearchParams({ ...(cat ? { category: cat } : {}), page: String(n) });
   return (
-    <div className="mx-auto max-w-wide">
+    <div className="listing-page">
+      <p className="eyebrow mb-5">SELECTED WORK / EXPERIMENTS</p>
       <PageHeader
-        title={<T k="page.projects" />}
-        description={<T k="desc.projects" />}
+        title={<T k="projects.title" />}
+        description={<T k="projects.desc" />}
       />
-      <TagFilter basePath="/projects" tags={getTags("projects")} active={tag} />
-      {projects.length === 0 ? (
-        <EmptyState>还没添加作品。</EmptyState>
-      ) : (
-        <>
-          <div className="grid gap-4 tablet:grid-cols-2 desktop:grid-cols-3">
-            {projects.map((p, i) => (
-              <Reveal key={p.slug} index={i} variant="rise" className="h-full [&>*]:h-full">
-                <ProjectCard doc={p} />
-              </Reveal>
-            ))}
-          </div>
-          <Pagination page={page} totalPages={totalPages} href={href} />
-        </>
+      {filter && (
+        <nav aria-label="Project categories" className="filter-tabs mb-8">
+          <Link href="/projects" className={!category ? "active" : ""}>
+            <T k="action.all" />
+          </Link>
+          {categories.map((c) => (
+            <Link
+              key={c}
+              href={href(1, c)}
+              className={category === c ? "active" : ""}
+            >
+              <T
+                k={
+                  c === "ai"
+                    ? "projects.ai"
+                    : c === "fullstack"
+                      ? "projects.fullstack"
+                      : "projects.other"
+                }
+              />
+            </Link>
+          ))}
+        </nav>
       )}
+      {projects.length ? (
+        <div
+          className={
+            projects.length === 1 ? "project-grid single" : "project-grid"
+          }
+        >
+          {projects.map((p, i) => (
+            <ProjectExhibit doc={p} key={p.slug} index={i} large={i === 0} />
+          ))}
+        </div>
+      ) : all.length ? (
+        <EmptyState>
+          <T k="blog.empty" />
+        </EmptyState>
+      ) : (
+        <EmptyProjects />
+      )}
+      <Pagination page={page} totalPages={totalPages} href={href} />
     </div>
   );
 }

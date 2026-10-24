@@ -1,13 +1,8 @@
+import path from "node:path";
 import type { NextConfig } from "next";
-
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  images: {
-    remotePatterns: [
-      { protocol: "https", hostname: "**" },
-    ],
-  },
-  eslint: { ignoreDuringBuilds: true },
+  outputFileTracingRoot: path.resolve(process.cwd()),
+  images: { remotePatterns: [{ protocol: "https", hostname: "**" }] },
 };
-
 export default nextConfig;

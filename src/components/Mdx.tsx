@@ -1,3 +1,4 @@
+import "katex/dist/katex.min.css";
 import Link from "next/link";
 import { evaluate } from "@mdx-js/mdx";
 import remarkGfm from "remark-gfm";
@@ -7,7 +8,11 @@ import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypePrettyCode from "rehype-pretty-code";
 import { cn } from "@/lib/utils";
 import { buildHeadings } from "@/lib/content";
-import { rehypeFigure, rehypeTocIds } from "@/lib/rehype-toc";
+import {
+  rehypeFigure,
+  rehypeTocIds,
+  rehypeReadingSections,
+} from "@/lib/rehype-toc";
 import { remarkLocalImages } from "@/lib/remark-local-images";
 import { sizeOf } from "@/lib/image-sizes";
 import { CodeBlock } from "./CodeBlock";
@@ -16,7 +21,8 @@ import { Details } from "./Details";
 import { LinkCard } from "./LinkCard";
 import { ImageRow, MdxImage, type ImageAlign } from "./MdxImage";
 
-const isInternal = (href: string) => href.startsWith("/") || href.startsWith("#");
+const isInternal = (href: string) =>
+  href.startsWith("/") || href.startsWith("#");
 
 /**
  * 拆分图片 URL 上的显示参数：`?w=400`（限宽）与 `?align=left|right`。
@@ -24,7 +30,8 @@ const isInternal = (href: string) => href.startsWith("/") || href.startsWith("#"
  */
 function splitSrc(src: string) {
   const q = src.indexOf("?");
-  if (q === -1) return { url: src, displayWidth: undefined, align: "center" as ImageAlign };
+  if (q === -1)
+    return { url: src, displayWidth: undefined, align: "center" as ImageAlign };
   const params = new URLSearchParams(src.slice(q + 1));
   const w = Number(params.get("w"));
   const align = params.get("align");
@@ -34,12 +41,18 @@ function splitSrc(src: string) {
   return {
     url: src.slice(0, q) + (rest ? `?${rest}` : ""),
     displayWidth: Number.isFinite(w) && w > 0 ? w : undefined,
-    align: (align === "left" || align === "right" ? align : "center") as ImageAlign,
+    align: (align === "left" || align === "right"
+      ? align
+      : "center") as ImageAlign,
   };
 }
 
 const components = {
-  a: ({ href = "", children, ...rest }: React.AnchorHTMLAttributes<HTMLAnchorElement>) =>
+  a: ({
+    href = "",
+    children,
+    ...rest
+  }: React.AnchorHTMLAttributes<HTMLAnchorElement>) =>
     isInternal(href) ? (
       <Link href={href} {...rest}>
         {children}
@@ -96,11 +109,15 @@ export async function Mdx({
     ...jsxRuntime,
     remarkPlugins: [remarkGfm, remarkMath, [remarkLocalImages, base]],
     rehypePlugins: [
+      rehypeReadingSections,
       // 标题 id 由 buildHeadings 统一供给，保证目录锚点与正文一致
       [rehypeTocIds, buildHeadings(source).map((h) => h.id)],
       rehypeFigure,
       [rehypeKatex, { throwOnError: false }],
-      [rehypeAutolinkHeadings, { behavior: "wrap", properties: { className: "no-underline" } }],
+      [
+        rehypeAutolinkHeadings,
+        { behavior: "wrap", properties: { className: "no-underline" } },
+      ],
       [
         rehypePrettyCode,
         {
@@ -118,7 +135,7 @@ export async function Mdx({
   return (
     <div
       className={cn(
-        "prose prose-neutral max-w-none animate-fade-up dark:prose-invert",
+        "prose prose-neutral max-w-none dark:prose-invert",
         className,
       )}
     >

@@ -16,7 +16,7 @@ function pageNumbers(page: number, total: number): (number | "…")[] {
 }
 
 const itemCls =
-  "inline-flex h-9 min-w-9 items-center justify-center rounded-control border border-border px-2 text-sm transition-colors";
+  "inline-flex h-11 min-w-11 items-center justify-center rounded-control border border-border px-2 text-sm transition-colors";
 
 export function Pagination({
   page,
@@ -31,9 +31,16 @@ export function Pagination({
   if (totalPages <= 1) return null;
 
   return (
-    <nav aria-label="分页" className="mt-10 flex flex-wrap items-center justify-center gap-2">
+    <nav
+      aria-label="分页"
+      className="mt-10 flex flex-wrap items-center justify-center gap-2"
+    >
       {page > 1 ? (
-        <Link href={href(page - 1)} className={cn(itemCls, "hover:bg-surface-strong")} rel="prev">
+        <Link
+          href={href(page - 1)}
+          className={cn(itemCls, "hover:bg-surface-strong")}
+          rel="prev"
+        >
           <ChevronLeft className="h-4 w-4" strokeWidth={1.5} />
           <span className="sr-only">上一页</span>
         </Link>
@@ -55,7 +62,9 @@ export function Pagination({
             aria-current={n === page ? "page" : undefined}
             className={cn(
               itemCls,
-              n === page ? "bg-accent-soft text-accent" : "text-text-muted hover:bg-surface-strong hover:text-text",
+              n === page
+                ? "bg-accent-soft text-accent"
+                : "text-text-muted hover:bg-surface-strong hover:text-text",
             )}
           >
             {n}
@@ -64,7 +73,11 @@ export function Pagination({
       )}
 
       {page < totalPages ? (
-        <Link href={href(page + 1)} className={cn(itemCls, "hover:bg-surface-strong")} rel="next">
+        <Link
+          href={href(page + 1)}
+          className={cn(itemCls, "hover:bg-surface-strong")}
+          rel="next"
+        >
           <ChevronRight className="h-4 w-4" strokeWidth={1.5} />
           <span className="sr-only">下一页</span>
         </Link>

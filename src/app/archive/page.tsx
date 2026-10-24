@@ -1,3 +1,4 @@
+import { pageMetadata } from "@/lib/metadata";
 import Link from "next/link";
 import { getAllDocs, type DocMeta } from "@/lib/content";
 import { hrefOf } from "@/lib/doc";
@@ -7,13 +8,17 @@ import { LocalDate } from "@/components/LocalDate";
 import { Reveal } from "@/components/Reveal";
 import { cn } from "@/lib/utils";
 
-export const metadata = { title: "归档" };
+export const metadata = pageMetadata(
+  "归档",
+  "按时间浏览项目与技术写作。",
+  "/archive",
+);
 
-const TYPE_LABEL: Record<DocMeta["type"], string> = {
-  posts: "文章",
-  notes: "笔记",
-  projects: "作品",
-};
+const TYPE_LABEL = {
+  posts: "nav.posts",
+  notes: "nav.notes",
+  projects: "nav.projects",
+} as const;
 
 const TYPE_STYLE: Record<DocMeta["type"], string> = {
   posts: "bg-accent-soft text-accent",
@@ -43,7 +48,9 @@ export default function ArchivePage() {
       />
 
       {groups.length === 0 ? (
-        <EmptyState>还没有内容。</EmptyState>
+        <EmptyState>
+          <T k="empty.content" />
+        </EmptyState>
       ) : (
         <div className="desktop:grid desktop:grid-cols-[1fr_160px] desktop:gap-10">
           <div className="space-y-10">
@@ -51,7 +58,9 @@ export default function ArchivePage() {
             {groups.map(([year, items], i) => (
               <Reveal key={year} index={i}>
                 <section id={`year-${year}`} className="scroll-mt-24">
-                  <h2 className="mb-3 text-sm font-medium text-text-muted">{year}</h2>
+                  <h2 className="mb-3 text-sm font-medium text-text-muted">
+                    {year}
+                  </h2>
                   <ul className="space-y-1">
                     {items.map((d) => (
                       <li key={`${d.type}-${d.slug}`}>
@@ -70,9 +79,11 @@ export default function ArchivePage() {
                               TYPE_STYLE[d.type],
                             )}
                           >
-                            {TYPE_LABEL[d.type]}
+                            <T k={TYPE_LABEL[d.type]} />
                           </span>
-                          <span className="min-w-0 flex-1 text-[15px]">{d.title}</span>
+                          <span className="min-w-0 flex-1 text-[15px]">
+                            {d.title}
+                          </span>
                         </Link>
                       </li>
                     ))}

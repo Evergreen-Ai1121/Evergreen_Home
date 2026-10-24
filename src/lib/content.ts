@@ -2,6 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import matter from "gray-matter";
 import GithubSlugger from "github-slugger";
+import { normalizeDate, compareProjects } from "./content-rules";
+import { site } from "./site";
 
 export type CollectionType = "notes" | "posts" | "projects";
 
@@ -28,6 +30,14 @@ export interface DocMeta {
   stack: string[];
   links: DocLink[];
   wordCount: number;
+  order: number;
+  projectCategory: "ai" | "fullstack" | "other";
+  role?: string;
+  period?: string;
+  contribution?: string;
+  outcome?: string;
+  related: string[];
+  language: string;
 }
 
 export interface TocItem {
@@ -123,14 +133,14 @@ export function buildToc(body: string): TocItem[] {
 function toMeta(type: CollectionType, filename: string, raw: string): DocMeta {
   const { data, content } = matter(raw);
   const slug = filename.replace(/\.mdx?$/, "");
-  const date = data.date instanceof Date ? data.date.toISOString() : String(data.date ?? "");
+  const date = normalizeDate(data.date);
   return {
     slug,
     type,
     title: String(data.title ?? slug),
     summary: String(data.summary ?? data.description ?? ""),
     date: date.slice(0, 10),
-    updated: data.updated ? String(data.updated).slice(0, 10) : undefined,
+    updated: normalizeDate(data.updated) || undefined,
     tags: Array.isArray(data.tags) ? data.tags.map(String) : [],
     category: data.category ? String(data.category) : undefined,
     cover: data.cover ? String(data.cover) : undefined,
@@ -140,8 +150,31 @@ function toMeta(type: CollectionType, filename: string, raw: string): DocMeta {
     badge: data.badge ? String(data.badge) : undefined,
     stack: Array.isArray(data.stack) ? data.stack.map(String) : [],
     wordCount: wordCountOf(content),
+    order: Number.isFinite(Number(data.order)) ? Number(data.order) : 999,
+    projectCategory:
+      data.projectCategory === "ai" || data.projectCategory === "fullstack"
+        ? data.projectCategory
+        : "other",
+    role: data.role ? String(data.role) : undefined,
+    period: data.period ? String(data.period) : undefined,
+    contribution: data.contribution ? String(data.contribution) : undefined,
+    outcome: data.outcome ? String(data.outcome) : undefined,
+    related: Array.isArray(data.related) ? data.related.map(String) : [],
+    language: String(data.language ?? "zh-CN"),
     links: Array.isArray(data.links)
-      ? data.links.map((l: DocLink) => ({ label: String(l.label), href: String(l.href) }))
+      ? data.links
+          .filter(
+            (l: DocLink) =>
+              l &&
+              /^https?:\/\//.test(String(l.href)) &&
+              !/^https?:\/\/(?:www\.)?(?:example\.com|github\.com\/?$)/.test(
+                String(l.href),
+              ),
+          )
+          .map((l: DocLink) => ({
+            label: String(l.label),
+            href: String(l.href),
+          }))
       : [],
   };
 }
@@ -152,9 +185,12 @@ export const PIN_BADGE = "Pin";
 export function getCollection(type: CollectionType): DocMeta[] {
   const includeDrafts = process.env.NODE_ENV !== "production";
   return readDir(type)
-    .map((f) => toMeta(type, f, fs.readFileSync(path.join(CONTENT_DIR, type, f), "utf8")))
+    .map((f) =>
+      toMeta(type, f, fs.readFileSync(path.join(CONTENT_DIR, type, f), "utf8")),
+    )
     .filter((d) => includeDrafts || !d.draft)
     .sort((a, b) => {
+      if (type === "projects") return compareProjects(a, b);
       const ap = a.badge === PIN_BADGE ? 1 : 0;
       const bp = b.badge === PIN_BADGE ? 1 : 0;
       if (ap !== bp) return bp - ap;
@@ -167,20 +203,25 @@ export function getAllSlugs(type: CollectionType): string[] {
 }
 
 export function getDoc(type: CollectionType, slug: string): Doc | null {
+  if (!/^[\p{L}\p{N}_-]+$/u.test(slug)) return null;
   const file = [`${slug}.mdx`, `${slug}.md`]
     .map((f) => path.join(CONTENT_DIR, type, f))
     .find((p) => fs.existsSync(p));
   if (!file) return null;
   const raw = fs.readFileSync(file, "utf8");
   const { content } = matter(raw);
+  const meta = toMeta(type, path.basename(file), raw);
+  if (meta.draft && process.env.NODE_ENV === "production") return null;
   return {
-    ...toMeta(type, path.basename(file), raw),
+    ...meta,
     content,
     toc: buildToc(content),
   };
 }
 
-export function getCategories(type: CollectionType): { name: string; count: number }[] {
+export function getCategories(
+  type: CollectionType,
+): { name: string; count: number }[] {
   const map = new Map<string, number>();
   for (const d of getCollection(type)) {
     if (!d.category) continue;
@@ -191,7 +232,9 @@ export function getCategories(type: CollectionType): { name: string; count: numb
     .sort((a, b) => b.count - a.count);
 }
 
-export function getTags(type: CollectionType): { name: string; count: number }[] {
+export function getTags(
+  type: CollectionType,
+): { name: string; count: number }[] {
   const map = new Map<string, number>();
   for (const d of getCollection(type)) {
     for (const t of d.tags) map.set(t, (map.get(t) ?? 0) + 1);
@@ -212,6 +255,44 @@ export function getAllDocs(): DocMeta[] {
   );
 }
 
+/** Explicit references are checked during prebuild as well as server rendering. */
+export function validateReferences() {
+  const docs = getAllDocs().filter((doc) => !doc.draft);
+  const byRef = new Map(docs.map((doc) => [`${doc.type}/${doc.slug}`, doc]));
+  for (const doc of docs) {
+    for (const ref of doc.related) {
+      if (!byRef.has(ref))
+        throw new Error(
+          `Invalid related reference: ${doc.type}/${doc.slug} → ${ref}`,
+        );
+    }
+  }
+  for (const group of site.evidence) {
+    for (const ref of group.refs) {
+      if (!byRef.has(ref))
+        throw new Error(`Invalid evidence reference: ${group.key} → ${ref}`);
+    }
+  }
+  return byRef;
+}
+
+export function getEvidence() {
+  const docs = validateReferences();
+  return site.evidence.map((group) => ({
+    key: group.key,
+    docs: group.refs.map((ref) => docs.get(ref)!),
+  }));
+}
+
+export function getExplicitRelated(doc: DocMeta): DocMeta[] {
+  const self = `${doc.type}/${doc.slug}`;
+  return getAllDocs().filter(
+    (other) =>
+      doc.related.includes(`${other.type}/${other.slug}`) ||
+      other.related.includes(self),
+  );
+}
+
 /** 全站标签：按文章数降序，同数量时按名字排，保证每次构建顺序稳定 */
 export function getAllTags(): { name: string; count: number }[] {
   const map = new Map<string, number>();
@@ -220,14 +301,17 @@ export function getAllTags(): { name: string; count: number }[] {
   }
   return [...map.entries()]
     .map(([name, count]) => ({ name, count }))
-    .sort((a, b) => (b.count - a.count) || a.name.localeCompare(b.name, "zh"));
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, "zh"));
 }
 
 export function getDocsByTag(tag: string): DocMeta[] {
-  return getAllDocs().filter((d) => d.tags.some((t) => t.toLowerCase() === tag.toLowerCase()));
+  return getAllDocs().filter((d) =>
+    d.tags.some((t) => t.toLowerCase() === tag.toLowerCase()),
+  );
 }
 
-const sameDoc = (a: DocMeta, b: DocMeta) => a.type === b.type && a.slug === b.slug;
+const sameDoc = (a: DocMeta, b: DocMeta) =>
+  a.type === b.type && a.slug === b.slug;
 
 /** 相关推荐：共享标签越多越靠前，没得推时降级为最新的几篇 */
 export function getRelated(doc: DocMeta, limit = 3): DocMeta[] {
@@ -238,7 +322,7 @@ export function getRelated(doc: DocMeta, limit = 3): DocMeta[] {
       score: d.tags.filter((t) => doc.tags.includes(t)).length,
     }))
     .filter((x) => x.score > 0)
-    .sort((a, b) => (b.score - a.score) || (a.doc.date < b.doc.date ? 1 : -1));
+    .sort((a, b) => b.score - a.score || (a.doc.date < b.doc.date ? 1 : -1));
   return (scored.length > 0 ? scored.map((x) => x.doc) : pool).slice(0, limit);
 }
 
@@ -246,7 +330,10 @@ export function getRelated(doc: DocMeta, limit = 3): DocMeta[] {
  * 上一篇 / 下一篇：取列表相邻项（列表顺序 = 看到的顺序）。
  * prev 是列表里更靠前的一条（更新），next 是更靠后的一条（更早），到头的那侧为 null。
  */
-export function getSiblings(type: CollectionType, slug: string): {
+export function getSiblings(
+  type: CollectionType,
+  slug: string,
+): {
   prev: DocMeta | null;
   next: DocMeta | null;
 } {
@@ -257,7 +344,9 @@ export function getSiblings(type: CollectionType, slug: string): {
 }
 
 /** 按年份归档 */
-export function getArchive(type: CollectionType): { year: string; items: DocMeta[] }[] {
+export function getArchive(
+  type: CollectionType,
+): { year: string; items: DocMeta[] }[] {
   const map = new Map<string, DocMeta[]>();
   for (const d of getCollection(type)) {
     const year = d.date.slice(0, 4) || "未标日期";
@@ -270,7 +359,9 @@ export function getArchive(type: CollectionType): { year: string; items: DocMeta
 }
 
 /** 读取独立页面 MDX（content/pages/about.mdx 等） */
-export function getPage(slug: string): { content: string; title: string } | null {
+export function getPage(
+  slug: string,
+): { content: string; title: string } | null {
   const file = path.join(CONTENT_DIR, "pages", `${slug}.mdx`);
   if (!fs.existsSync(file)) return null;
   const { data, content } = matter(fs.readFileSync(file, "utf8"));

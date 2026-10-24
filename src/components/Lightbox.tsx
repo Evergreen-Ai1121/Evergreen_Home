@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, ImageIcon, Loader2, X } from "lucide-react";
+import { useLang } from "./LangProvider";
 import { trapTab } from "@/lib/focus";
 
 export interface LightboxImage {
@@ -24,6 +25,7 @@ export function Lightbox({
   onClose: () => void;
   onIndex: (i: number) => void;
 }) {
+  const { t } = useLang();
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
   const startX = useRef<number | null>(null);
@@ -31,8 +33,14 @@ export function Lightbox({
   const dialogRef = useRef<HTMLDivElement>(null);
   const total = images.length;
 
-  const prev = useCallback(() => onIndex((index - 1 + total) % total), [index, total, onIndex]);
-  const next = useCallback(() => onIndex((index + 1) % total), [index, total, onIndex]);
+  const prev = useCallback(
+    () => onIndex((index - 1 + total) % total),
+    [index, total, onIndex],
+  );
+  const next = useCallback(
+    () => onIndex((index + 1) % total),
+    [index, total, onIndex],
+  );
 
   const handlers = useRef({ prev, next, onClose });
   handlers.current = { prev, next, onClose };
@@ -73,7 +81,7 @@ export function Lightbox({
       ref={dialogRef}
       role="dialog"
       aria-modal="true"
-      aria-label="图片预览"
+      aria-label={t("ui.preview")}
       className="fixed inset-0 z-[60] flex items-center justify-center"
       onTouchStart={(e) => (startX.current = e.touches[0].clientX)}
       onTouchEnd={(e) => {
@@ -83,13 +91,17 @@ export function Lightbox({
         startX.current = null;
       }}
     >
-      <div className="absolute inset-0 bg-scrim backdrop-blur" onClick={onClose} aria-hidden />
+      <div
+        className="absolute inset-0 bg-scrim backdrop-blur"
+        onClick={onClose}
+        aria-hidden
+      />
       <button
         ref={closeRef}
         type="button"
         onClick={onClose}
-        aria-label="关闭预览"
-        className="absolute right-4 top-4 z-10 rounded-control bg-surface p-2 text-text-muted hover:text-text"
+        aria-label={t("ui.closePreview")}
+        className="absolute right-4 top-4 z-10 min-h-11 min-w-11 inline-flex items-center justify-center rounded-control bg-surface p-2 text-text-muted hover:text-text"
       >
         <X className="h-5 w-5" strokeWidth={1.5} />
       </button>
@@ -98,16 +110,16 @@ export function Lightbox({
           <button
             type="button"
             onClick={prev}
-            aria-label="上一张"
-            className="absolute left-2 z-10 rounded-control bg-surface p-2 text-text-muted hover:text-text tablet:left-6"
+            aria-label={t("ui.prevImage")}
+            className="absolute left-2 z-10 min-h-11 min-w-11 inline-flex items-center justify-center rounded-control bg-surface p-2 text-text-muted hover:text-text tablet:left-6"
           >
             <ChevronLeft className="h-6 w-6" strokeWidth={1.5} />
           </button>
           <button
             type="button"
             onClick={next}
-            aria-label="下一张"
-            className="absolute right-2 z-10 rounded-control bg-surface p-2 text-text-muted hover:text-text tablet:right-6"
+            aria-label={t("ui.nextImage")}
+            className="absolute right-2 z-10 min-h-11 min-w-11 inline-flex items-center justify-center rounded-control bg-surface p-2 text-text-muted hover:text-text tablet:right-6"
           >
             <ChevronRight className="h-6 w-6" strokeWidth={1.5} />
           </button>
@@ -118,15 +130,17 @@ export function Lightbox({
       )}
       <figure className="relative z-[5] max-h-[85dvh] w-full px-4">
         {loading && (
-          <Loader2 className="mx-auto h-6 w-6 animate-spin text-text-muted" strokeWidth={1.5} />
+          <Loader2
+            className="mx-auto h-6 w-6 animate-spin text-text-muted"
+            strokeWidth={1.5}
+          />
         )}
         {failed ? (
           <div className="mx-auto flex max-w-xs flex-col items-center gap-2 rounded-card border border-border bg-surface px-6 py-12 text-sm text-text-muted">
             <ImageIcon className="h-6 w-6" strokeWidth={1.5} />
-            <span>{current.alt || "图片加载失败"}</span>
+            <span>{current.alt || t("ui.imageFailed")}</span>
           </div>
         ) : (
-          /* eslint-disable-next-line @next/next/no-img-element */
           <img
             src={current.src}
             alt={current.alt}

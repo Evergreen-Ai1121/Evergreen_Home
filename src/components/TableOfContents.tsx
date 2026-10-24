@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ListTree, X } from "lucide-react";
+import { useLang } from "./LangProvider";
+import { trapTab } from "@/lib/focus";
 import { cn } from "@/lib/utils";
 import type { TocItem } from "@/lib/content";
 
@@ -12,7 +14,7 @@ import type { TocItem } from "@/lib/content";
  * 注意：不要给 .prose h2/h3 再加 scroll-margin-top —— 它会和 scroll-padding-top 相加，
  * 让标题落位掉到 184px。
  */
-const TOP_LINE = 96;
+const TOP_LINE = 108;
 /** 点击目录后，滚动停止多久解除高亮锁定 */
 const UNLOCK_IDLE_MS = 120;
 
@@ -94,10 +96,35 @@ export function TableOfContents({
   items: TocItem[];
   variant?: "sidebar" | "floating";
 }) {
+  const { t } = useLang();
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const { activeId, jump } = useActiveId(items);
   const scrollRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef(new Map<string, HTMLAnchorElement>());
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    dialogRef.current?.querySelector<HTMLAnchorElement>("a")?.focus();
+    const key = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Tab") trapTab(event, dialogRef.current);
+    };
+    const resize = () => {
+      if (window.innerWidth >= 1280) setOpen(false);
+    };
+    window.addEventListener("keydown", key);
+    window.addEventListener("resize", resize);
+    return () => {
+      document.body.style.overflow = previous;
+      window.removeEventListener("keydown", key);
+      window.removeEventListener("resize", resize);
+      triggerRef.current?.focus();
+    };
+  }, [open]);
 
   // 当前章节滚出目录可视区时才滚动，且平滑过渡
   useEffect(() => {
@@ -113,9 +140,12 @@ export function TableOfContents({
     const top = elRect.top - boxTop + box.scrollTop;
     const bottom = top + elRect.height;
 
-    const outOfView = top < box.scrollTop || bottom > box.scrollTop + box.clientHeight;
+    const outOfView =
+      top < box.scrollTop || bottom > box.scrollTop + box.clientHeight;
     if (!outOfView) return;
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
     box.scrollTo({
       top: Math.max(0, top - (box.clientHeight - elRect.height) / 2),
       behavior: reduced ? "auto" : "smooth",
@@ -167,14 +197,16 @@ export function TableOfContents({
 
   if (variant === "sidebar") {
     return (
-      // fixed 而非 sticky：sticky 到容器底部就会失效，滚到文章末尾目录会飘走
+      // Sticky rail stays inside the article grid; no viewport-width formulas.
       <aside
-        className="toc-rail fixed top-24 z-30 hidden w-60 desktop:block"
-        aria-label="目录"
+        className="toc-rail z-30 hidden desktop:block"
+        aria-label={t("label.toc")}
       >
         {/* 卡片化：和正文一样是一块玻璃面板，而不是裸列表 */}
         <div className="glass rounded-card p-4">
-          <p className="mb-3 pl-1 text-xs uppercase tracking-wide text-text-muted">目录</p>
+          <p className="mb-3 pl-1 text-xs uppercase tracking-wide text-text-muted">
+            {t("label.toc")}
+          </p>
           <div
             ref={scrollRef}
             className="no-scrollbar relative max-h-[calc(100dvh-14rem)] overflow-y-auto pr-1"
@@ -191,10 +223,11 @@ export function TableOfContents({
     <div className="desktop:hidden">
       <button
         type="button"
+        ref={triggerRef}
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        aria-label={open ? "关闭目录" : "打开目录"}
-        className="fixed bottom-24 left-4 z-40 inline-flex h-10 w-10 items-center justify-center rounded-pill border border-border bg-surface-strong text-text-muted shadow-glass backdrop-blur transition-colors hover:text-accent tablet:bottom-8 tablet:left-8"
+        aria-label={open ? t("ui.closeToc") : t("ui.openToc")}
+        className="fixed bottom-6 left-4 z-40 inline-flex h-11 w-11 items-center justify-center rounded-pill border border-border bg-surface-strong text-text-muted shadow-glass backdrop-blur transition-colors hover:text-accent tablet:bottom-8 tablet:left-8"
       >
         {open ? (
           <X className="h-4 w-4" strokeWidth={1.5} />
@@ -205,10 +238,15 @@ export function TableOfContents({
 
       {open && (
         <div
-          className="glass-strong fixed bottom-40 left-4 z-40 w-64 animate-fade-up rounded-card p-4 tablet:bottom-24 tablet:left-8"
-          aria-label="目录"
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          className="glass-strong fixed bottom-24 left-4 z-40 w-64 animate-fade-up rounded-card p-4 tablet:bottom-24 tablet:left-8"
+          aria-label={t("label.toc")}
         >
-          <p className="mb-3 pl-3 text-xs uppercase tracking-wide text-text-muted">目录</p>
+          <p className="mb-3 pl-3 text-xs uppercase tracking-wide text-text-muted">
+            {t("label.toc")}
+          </p>
           <div
             ref={scrollRef}
             className="no-scrollbar max-h-[50dvh] overflow-y-auto pr-1"

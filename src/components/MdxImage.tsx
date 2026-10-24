@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ImageIcon } from "lucide-react";
+import { useLang } from "./LangProvider";
 import { cn } from "@/lib/utils";
 import { Lightbox, type LightboxImage } from "./Lightbox";
 
@@ -34,9 +35,13 @@ export function MdxImage({
   displayWidth?: number;
   align?: ImageAlign;
 }) {
+  const { t } = useLang();
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
-  const [group, setGroup] = useState<{ images: LightboxImage[]; index: number } | null>(null);
+  const [group, setGroup] = useState<{
+    images: LightboxImage[];
+    index: number;
+  } | null>(null);
   const imgRef = useRef<HTMLImageElement>(null);
 
   // 命中缓存时 onLoad 可能早于 hydration，补一次检查避免图片停在 opacity-0
@@ -51,7 +56,9 @@ export function MdxImage({
     const el = imgRef.current;
     if (!el) return;
     const scope = el.closest("article") ?? el.closest(".prose") ?? document;
-    const list = Array.from(scope.querySelectorAll<HTMLImageElement>("img[data-mdx-image]"));
+    const list = Array.from(
+      scope.querySelectorAll<HTMLImageElement>("img[data-mdx-image]"),
+    );
     const index = list.indexOf(el);
     setGroup({
       images: list.map((n) => ({ src: n.currentSrc || n.src, alt: n.alt })),
@@ -63,12 +70,12 @@ export function MdxImage({
     return (
       <span
         role="img"
-        aria-label={alt || "图片加载失败"}
+        aria-label={alt || t("ui.imageFailed")}
         className={cn("mdx-img-fallback my-6", alignClass[align])}
         style={{ maxWidth: displayWidth, aspectRatio: ratio }}
       >
         <ImageIcon className="h-6 w-6 shrink-0" strokeWidth={1.5} />
-        <span>{alt || "图片加载失败"}</span>
+        <span>{alt || t("ui.imageFailed")}</span>
       </span>
     );
   }
@@ -78,14 +85,15 @@ export function MdxImage({
       className={cn("mdx-img my-6", alignClass[align])}
       style={{ maxWidth: displayWidth, aspectRatio: ratio }}
     >
-      {!loaded && ratio && <span className="mdx-img-skeleton animate-pulse" aria-hidden />}
+      {!loaded && ratio && (
+        <span className="mdx-img-skeleton animate-pulse" aria-hidden />
+      )}
       <button
         type="button"
         onClick={open}
-        aria-label={`放大图片：${alt || "图片"}`}
+        aria-label={t("ui.enlargeImage") + (alt ? ": " + alt : "")}
         className="block w-full cursor-zoom-in"
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           ref={imgRef}
           src={src}
@@ -129,7 +137,9 @@ export function ImageRow({
     <div
       className={cn(
         "my-6 grid gap-3",
-        cols === 3 ? "grid-cols-1 tablet:grid-cols-3" : "grid-cols-1 tablet:grid-cols-2",
+        cols === 3
+          ? "grid-cols-1 tablet:grid-cols-3"
+          : "grid-cols-1 tablet:grid-cols-2",
       )}
     >
       {children}

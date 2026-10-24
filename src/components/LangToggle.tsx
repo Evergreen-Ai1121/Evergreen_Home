@@ -7,17 +7,17 @@ import { useLang } from "./LangProvider";
 
 /** 中 ⇄ 英：点一下直接切，不做下拉（只有两个选项） */
 export function LangToggle({ className }: { className?: string }) {
-  const { lang, setLang } = useLang();
+  const { lang, setLang, t } = useLang();
   const next: Lang = lang === "zh" ? "en" : "zh";
 
   return (
     <button
       type="button"
       onClick={() => setLang(next)}
-      aria-label={`切换语言：${LANG_LABEL[next]}`}
-      title={`切换语言：${LANG_LABEL[next]}`}
+      aria-label={t("action.lang") + ": " + LANG_LABEL[next]}
+      title={t("action.lang") + ": " + LANG_LABEL[next]}
       className={cn(
-        "inline-flex h-10 w-10 items-center justify-center rounded-control border border-border",
+        "inline-flex h-11 w-11 items-center justify-center rounded-control border border-border",
         "bg-surface text-xs font-medium text-text-muted backdrop-blur transition-colors duration-150",
         "hover:text-text hover:bg-surface-strong",
         className,

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
+import { useLang } from "./LangProvider";
 import { cn } from "@/lib/utils";
 
 function apply(theme: "light" | "dark") {
@@ -11,10 +12,13 @@ function apply(theme: "light" | "dark") {
 }
 
 export function ThemeToggle({ className }: { className?: string }) {
+  const { t } = useLang();
   const [theme, setTheme] = useState<"light" | "dark" | null>(null);
 
   useEffect(() => {
-    setTheme(document.documentElement.classList.contains("dark") ? "dark" : "light");
+    setTheme(
+      document.documentElement.classList.contains("dark") ? "dark" : "light",
+    );
   }, []);
 
   const next = theme === "dark" ? "light" : "dark";
@@ -22,14 +26,14 @@ export function ThemeToggle({ className }: { className?: string }) {
   return (
     <button
       type="button"
-      aria-label={theme === "dark" ? "切换到浅色模式" : "切换到深色模式"}
-      title={theme === "dark" ? "切换到浅色模式" : "切换到深色模式"}
+      aria-label={theme === "dark" ? t("ui.light") : t("ui.dark")}
+      title={theme === "dark" ? t("ui.light") : t("ui.dark")}
       onClick={() => {
         apply(next);
         setTheme(next);
       }}
       className={cn(
-        "inline-flex h-10 w-10 items-center justify-center rounded-control border border-border",
+        "inline-flex h-11 w-11 items-center justify-center rounded-control border border-border",
         "bg-surface text-text-muted backdrop-blur transition-colors duration-150",
         "hover:text-text hover:bg-surface-strong",
         className,
@@ -48,4 +52,4 @@ export function ThemeToggle({ className }: { className?: string }) {
 }
 
 /** 首屏内联脚本：在渲染前写入主题类，避免深色模式白屏闪烁 */
-export const themeInitScript = `(function(){try{var t=localStorage.getItem('theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}if(t==='dark'){document.documentElement.classList.add('dark');}document.documentElement.style.colorScheme=t;}catch(e){}})();`;
+export const themeInitScript = `(function(){try{var t=localStorage.getItem('theme');t=t==='light'?'light':'dark';document.documentElement.classList.toggle('dark',t==='dark');document.documentElement.style.colorScheme=t;}catch(e){document.documentElement.classList.add('dark');}})();`;

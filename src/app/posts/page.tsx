@@ -1,53 +1,16 @@
-import { getCollection, getTags } from "@/lib/content";
-import { ContentCard } from "@/components/Cards";
-import { Pagination } from "@/components/Pagination";
-import { EmptyState, PageHeader } from "@/components/PageHeader";
-import { Reveal } from "@/components/Reveal";
-import { T } from "@/components/LangProvider";
-import { TagFilter } from "@/components/TagFilter";
-
-export const metadata = { title: "文章" };
-
-const PAGE_SIZE = 12;
-
-export default async function PostsPage({
+import { permanentRedirect } from "next/navigation";
+import { blogHref } from "@/lib/content-rules";
+export default async function LegacyList({
   searchParams,
 }: {
-  searchParams: Promise<{ tag?: string; page?: string }>;
+  searchParams: Promise<{ tag?: string; category?: string; page?: string }>;
 }) {
-  const { tag, page: raw } = await searchParams;
-  const all = getCollection("posts");
-  const filtered = tag ? all.filter((d) => d.tags.includes(tag)) : all;
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const page = Math.min(Math.max(1, Number(raw) || 1), totalPages);
-  const posts = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-
-  const href = (n: number) => {
-    const q = new URLSearchParams();
-    if (tag) q.set("tag", tag);
-    q.set("page", String(n));
-    return `/posts?${q}`;
-  };
-
-  return (
-    <div className="mx-auto max-w-wide">
-      <PageHeader title={<T k="nav.posts" />} description={<T k="desc.posts" />} />
-      <TagFilter basePath="/posts" tags={getTags("posts")} active={tag} />
-      {posts.length === 0 ? (
-        <EmptyState>这个标签下还没有文章。</EmptyState>
-      ) : (
-        <>
-          <div className="grid gap-4 tablet:grid-cols-2">
-            {posts.map((p, i) => (
-              <Reveal key={p.slug} index={i} variant="rise" className="h-full [&>*]:h-full">
-                <ContentCard doc={p} />
-              </Reveal>
-            ))}
-          </div>
-          <Pagination page={page} totalPages={totalPages} href={href} />
-        </>
-      )}
-    </div>
+  const query = await searchParams;
+  permanentRedirect(
+    blogHref({
+      ...query,
+      type: "posts",
+      page: query.page ? Number(query.page) : undefined,
+    }),
   );
 }

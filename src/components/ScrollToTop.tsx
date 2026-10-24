@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { ArrowUp } from "lucide-react";
-import { getLenis } from "@/lib/smooth-scroll";
+import { useLang } from "./LangProvider";
 
 /** 回到顶部：滚动超过一屏后出现，移动端避开底部标签栏 */
 export function ScrollToTop() {
+  const { t } = useLang();
   const [show, setShow] = useState(false);
 
   useEffect(() => {
@@ -18,14 +19,19 @@ export function ScrollToTop() {
   return (
     <button
       type="button"
-      aria-label="回到顶部"
+      tabIndex={show ? 0 : -1}
+      aria-hidden={!show}
+      aria-label={t("ui.top")}
       onClick={() => {
-        // 首页桌面端 Lenis 接管了滚动，必须走它，否则原生平滑会和 Lenis 抢滚动位置
-        const lenis = getLenis();
-        if (lenis) lenis.scrollTo(0);
-        else window.scrollTo({ top: 0, behavior: "smooth" });
+        window.scrollTo({
+          top: 0,
+          behavior: window.matchMedia("(prefers-reduced-motion: reduce)")
+            .matches
+            ? "instant"
+            : "smooth",
+        });
       }}
-      className={`fixed bottom-24 right-4 z-30 inline-flex h-10 w-10 items-center justify-center rounded-pill border border-border bg-surface-strong text-text-muted shadow-glass backdrop-blur transition-all duration-200 hover:text-accent tablet:bottom-8 tablet:right-8 ${
+      className={`fixed bottom-6 right-4 z-30 inline-flex h-11 w-11 items-center justify-center rounded-pill border border-border bg-surface-strong text-text-muted shadow-glass backdrop-blur transition-all duration-200 hover:text-accent tablet:bottom-8 tablet:right-8 ${
         show ? "opacity-100" : "pointer-events-none opacity-0"
       }`}
     >

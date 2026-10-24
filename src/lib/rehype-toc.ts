@@ -11,6 +11,31 @@ export interface HastNode {
   children?: HastNode[];
 }
 
+/** Group MDX by h2 so scroll reveals operate on readable sections, not every line. */
+export function rehypeReadingSections() {
+  return (tree: HastNode) => {
+    const sections: HastNode[] = [];
+    let current: HastNode | null = null;
+    for (const child of tree.children ?? []) {
+      if (child.type === "mdxjsEsm") {
+        sections.push(child);
+        continue;
+      }
+      if (!current || (child.type === "element" && child.tagName === "h2")) {
+        current = {
+          type: "element",
+          tagName: "section",
+          properties: { className: ["reading-section"] },
+          children: [],
+        };
+        sections.push(current);
+      }
+      current.children!.push(child);
+    }
+    tree.children = sections;
+  };
+}
+
 /**
  * 把 buildHeadings() 生成的 id 按文档顺序写回 h1–h6。
  *
@@ -61,9 +86,13 @@ const captionOf = (img: HastNode): string => {
 
 /** 段落里只有一张图时返回它，否则 null（图注不能嵌进混排段落，会破坏结构） */
 function loneImage(p: HastNode): HastNode | null {
-  const kids = (p.children ?? []).filter((c) => c.type === "element" || c.value?.trim());
+  const kids = (p.children ?? []).filter(
+    (c) => c.type === "element" || c.value?.trim(),
+  );
   if (kids.length !== 1) return null;
-  return kids[0]!.type === "element" && kids[0]!.tagName === "img" ? kids[0]! : null;
+  return kids[0]!.type === "element" && kids[0]!.tagName === "img"
+    ? kids[0]!
+    : null;
 }
 
 /**

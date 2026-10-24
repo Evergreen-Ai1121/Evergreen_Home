@@ -1,3 +1,4 @@
+import { pageMetadata } from "@/lib/metadata";
 import Link from "next/link";
 import { Tag } from "lucide-react";
 import { getAllTags } from "@/lib/content";
@@ -6,7 +7,11 @@ import { Reveal } from "@/components/Reveal";
 import { T } from "@/components/LangProvider";
 import { cn } from "@/lib/utils";
 
-export const metadata = { title: "标签" };
+export const metadata = pageMetadata(
+  "标签",
+  "按主题探索项目与技术写作。",
+  "/tags",
+);
 
 /** 按文章数分档的字号，做出云的感觉（不是随数量线性放大） */
 function sizeOf(count: number, max: number) {
@@ -39,7 +44,7 @@ export default function TagsPage() {
                   <Link
                     href={`/tags/${encodeURIComponent(t.name)}`}
                     className={cn(
-                      "inline-flex items-center gap-1.5 rounded-pill bg-accent-soft px-3 py-1 text-accent transition-opacity hover:opacity-80",
+                      "inline-flex min-h-11 items-center gap-1.5 rounded-pill bg-accent-soft px-3 py-1 text-accent transition-opacity hover:opacity-80",
                       sizeOf(t.count, max),
                     )}
                   >

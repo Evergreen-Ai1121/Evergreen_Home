@@ -1,44 +1,42 @@
+/** Public profile. Empty optional fields are hidden by the UI. */
 export const site = {
   name: "Evergreen",
   author: "Evergreen",
-  tagline: "学习笔记 · 文章日记 · 说说 · 作品集",
+  tagline: "AI 应用 · 全栈开发 · 持续记录",
   description:
-    "一个记录学习笔记、文章日记、生活瞬间与求职作品的个人网站。",
-  /** 用于 sitemap / RSS / 绝对链接，部署后在环境变量里覆盖 */
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
-  nav: [
-    { href: "/", label: "首页", key: "home" },
-    { href: "/notes", label: "笔记", key: "notes" },
-    { href: "/posts", label: "文章", key: "posts" },
-    { href: "/moments", label: "说说", key: "moments" },
-    { href: "/projects", label: "作品", key: "projects" },
-    { href: "/about", label: "关于", key: "about" },
-  ],
-  /** 次要导航：只出现在桌面侧栏与平板顶栏，移动端底部标签栏保持六个主入口 */
-  moreNav: [
-    { href: "/tags", label: "标签", key: "tags" },
-    { href: "/archive", label: "归档", key: "archive" },
-  ],
-  social: [
-    { label: "GitHub", href: "https://github.com/", key: "github" },
-    { label: "邮箱", href: "mailto:aievergreen@qq.com", key: "mail" },
-  ],
-  /** 侧栏顶部的头像（放 public/ 下，换图只改这一行） */
+    "Evergreen 的个人数字展厅：AI 与全栈开发方向的项目实践、技术写作与学习记录。",
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://evergreen1121.cn",
   avatar: "/images/avatar.webp",
-  giscus: {
-    repo: process.env.NEXT_PUBLIC_GISCUS_REPO ?? "",
-    repoId: process.env.NEXT_PUBLIC_GISCUS_REPO_ID ?? "",
-    category: process.env.NEXT_PUBLIC_GISCUS_CATEGORY ?? "Announcements",
-    categoryId: process.env.NEXT_PUBLIC_GISCUS_CATEGORY_ID ?? "",
-  },
-  homeFeed: { posts: 5, moments: 3, projects: 3 },
+  email: "aievergreen@qq.com",
+  github: "",
+  resume: "",
+  direction: "AI 应用 / 全栈开发 · 实习与应届求职",
+  directionEn: "AI / Full-stack · Intern & graduate opportunities",
+  introduction:
+    "我关注从界面到服务的完整体验，也在探索 AI 如何成为真正可用的产品能力。这里记录我的实践、选择和思考。",
+  education: [] as {
+    title: string;
+    detail: string;
+    start: string;
+    end?: string;
+  }[],
+  experience: [] as {
+    title: string;
+    detail: string;
+    start: string;
+    end?: string;
+  }[],
+  nav: [
+    { href: "/", key: "home" },
+    { href: "/projects", key: "projects" },
+    { href: "/blog", key: "blog" },
+    { href: "/about", key: "about" },
+  ],
+  evidence: [
+    { key: "interface", refs: ["notes/react-server-components"] },
+    {
+      key: "delivery",
+      refs: ["posts/debug-image-cls", "notes/glassmorphism-performance"],
+    },
+  ],
 } as const;
-
-export const NAV_ICONS: Record<string, string> = {
-  home: "home",
-  notes: "notes",
-  posts: "posts",
-  moments: "moments",
-  projects: "projects",
-  about: "about",
-};

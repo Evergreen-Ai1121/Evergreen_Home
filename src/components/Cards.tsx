@@ -1,155 +1,30 @@
 import Link from "next/link";
-import { ArrowUpRight, Clock, Tag } from "lucide-react";
 import type { DocMeta } from "@/lib/content";
 import { cn } from "@/lib/utils";
-import { GlassCard } from "./GlassCard";
-import { LocalDate } from "./LocalDate";
-import { SafeImage } from "./SafeImage";
-
-/** 标签药丸：全站统一 accent 底色，和分类徽标一致 */
+import { T } from "./LangProvider";
+import { WritingRow, ProjectExhibit } from "./Exhibit";
 export function TagChip({ name, href }: { name: string; href?: string }) {
-  const cls = "inline-flex items-center rounded-pill bg-accent-soft px-2.5 py-0.5 text-xs text-accent";
   return href ? (
-    <Link href={href} className={cn(cls, "transition-opacity hover:opacity-80")}>
+    <Link href={href} className="filter-chip active">
       {name}
     </Link>
   ) : (
-    <span className={cls}>{name}</span>
+    <span className="tech-label">{name}</span>
   );
 }
-
-/** 置顶 / 自定义徽标 */
 export function BadgeChip({ badge }: { badge?: string }) {
-  if (!badge) return null;
-  return (
-    <span className="inline-flex items-center gap-1 rounded-pill bg-accent-soft px-2.5 py-0.5 text-xs text-accent">
-      {badge === "Pin" ? "置顶" : badge}
+  return badge ? (
+    <span className={cn("tech-label")}>
+      {badge === "Pin" ? <T k="blog.featured" /> : badge}
     </span>
-  );
+  ) : null;
 }
-
-/** 文章卡片：封面 + 摘要 + 阅读时长 */
 export function ContentCard({ doc }: { doc: DocMeta }) {
-  return (
-    <GlassCard interactive className="group overflow-hidden">
-      <Link href={`/posts/${doc.slug}`} className="block">
-        {doc.cover ? (
-          <div className="overflow-hidden border-b border-border">
-            <div className="aspect-[16/9] w-full transition-transform duration-300 ease-out group-hover:scale-[1.04]">
-              <SafeImage src={doc.cover} alt="" ratio="16 / 9" />
-            </div>
-          </div>
-        ) : (
-          /* 没有封面的文章给一张品牌渐变占位头图，不再是一片白 */
-          <div className="relative h-28 w-full overflow-hidden border-b border-border bg-gradient-to-br from-glow-a via-glow-b to-glow-c">
-            <Tag
-              aria-hidden
-              className="absolute -bottom-5 -right-4 h-24 w-24 rotate-12 text-white/40"
-              strokeWidth={1}
-            />
-          </div>
-        )}
-        <div className="p-5">
-          <div className="flex flex-wrap items-center gap-2 text-xs text-text-muted">
-            <LocalDate
-              date={doc.date}
-              className="rounded-pill bg-surface-strong px-2 py-0.5 text-text-muted"
-            />
-            <span className="inline-flex items-center gap-1">
-              <Clock className="h-3.5 w-3.5" strokeWidth={1.5} />
-              {doc.readingTime} 分钟
-            </span>
-            <BadgeChip badge={doc.badge} />
-          </div>
-          <h3 className="mt-2 text-[17px] font-semibold">{doc.title}</h3>
-          {doc.summary && (
-            <p className="mt-2 line-clamp-2 text-sm text-text-muted">{doc.summary}</p>
-          )}
-          {doc.tags.length > 0 && (
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {doc.tags.map((t) => (
-                <TagChip key={t} name={t} />
-              ))}
-            </div>
-          )}
-        </div>
-      </Link>
-    </GlassCard>
-  );
+  return <WritingRow doc={doc} />;
 }
-
-/** 笔记列表项：分类 + 标签 */
 export function NoteItem({ doc }: { doc: DocMeta }) {
-  return (
-    <GlassCard interactive>
-      <Link href={`/notes/${doc.slug}`} className="flex flex-col gap-2 p-5">
-        <div className="flex flex-wrap items-center gap-2 text-xs text-text-muted">
-          {doc.category && (
-            <span className="rounded-pill bg-accent-soft px-2.5 py-0.5 text-accent">
-              {doc.category}
-            </span>
-          )}
-          <LocalDate
-            date={doc.date}
-            className="rounded-pill bg-surface-strong px-2 py-0.5 text-text-muted"
-          />
-          <BadgeChip badge={doc.badge} />
-        </div>
-        <h3 className="text-[17px] font-semibold">{doc.title}</h3>
-        {doc.summary && (
-          <p className="line-clamp-2 text-sm text-text-muted">{doc.summary}</p>
-        )}
-        {doc.tags.length > 0 && (
-          <div className="mt-1 flex flex-wrap items-center gap-1.5">
-            <Tag className="h-3.5 w-3.5 text-text-muted" strokeWidth={1.5} />
-            {doc.tags.map((t) => (
-              <TagChip key={t} name={t} />
-            ))}
-          </div>
-        )}
-      </Link>
-    </GlassCard>
-  );
+  return <WritingRow doc={doc} />;
 }
-
-/** 作品卡片：截图 + 技术栈 */
 export function ProjectCard({ doc }: { doc: DocMeta }) {
-  return (
-    <GlassCard interactive className="overflow-hidden">
-      <Link href={`/projects/${doc.slug}`} className="block">
-        {doc.cover && (
-          <div className="aspect-[16/9] w-full overflow-hidden border-b border-border">
-            <SafeImage src={doc.cover} alt={`${doc.title} 封面`} ratio="16 / 9" />
-          </div>
-        )}
-        <div className="p-5">
-          <div className="mb-2">
-            <BadgeChip badge={doc.badge} />
-          </div>
-          <h3 className="text-[17px] font-semibold">{doc.title}</h3>
-          {doc.summary && (
-            <p className="mt-2 line-clamp-3 text-sm text-text-muted">{doc.summary}</p>
-          )}
-          {doc.stack.length > 0 && (
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {doc.stack.map((s) => (
-                <span
-                  key={s}
-                  className="rounded-pill border border-border px-2.5 py-0.5 text-xs text-text-muted"
-                >
-                  {s}
-                </span>
-              ))}
-            </div>
-          )}
-          {doc.links.length > 0 && (
-            <span className="mt-4 inline-flex items-center gap-1 text-sm text-accent">
-              {doc.links[0].label}
-              <ArrowUpRight className="h-4 w-4" strokeWidth={1.5} />
-            </span>
-          )}
-        </div>
-      </Link>
-    </GlassCard>
-  );
+  return <ProjectExhibit doc={doc} />;
 }
